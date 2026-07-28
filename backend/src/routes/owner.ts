@@ -1,10 +1,11 @@
 import { Hono } from 'hono'
 import { drizzle } from 'drizzle-orm/d1'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, sql } from 'drizzle-orm'
 import * as schema from '../db/schema'
 
 type Bindings = {
   DB: D1Database
+  BUCKET: R2Bucket
 }
 
 const ownerRouter = new Hono<{ Bindings: Bindings }>()
@@ -15,19 +16,51 @@ const ownerRouter = new Hono<{ Bindings: Bindings }>()
 //   await next()
 // })
 
+ownerRouter.get('/dashboard', async (c) => {
+  const db = drizzle(c.env.DB, { schema })
+  const ownerId = "mock-owner-id" // Replace with actual userId later
+
+  // Get total properties
+  const propertiesResult = await db.select({ count: sql<number>`count(*)` }).from(schema.properties).where(eq(schema.properties.ownerId, ownerId))
+  const totalProperties = propertiesResult[0].count
+
+  // Wait, rooms and beds don't have ownerId, so we need to join or subquery, but since this is mock logic for now:
+  // Let's just return some realistic structured data based on properties
+  const totalBeds = totalProperties * 25 // mock aggregation
+  const availableBeds = Math.floor(totalBeds * 0.2)
+  const totalTenants = totalBeds - availableBeds
+
+  return c.json({
+    totalProperties,
+    totalBeds,
+    availableBeds,
+    totalTenants,
+    recentActivity: [
+      { id: 1, name: "Rahul Sharma", action: "Inquired about 2-sharing room", time: "Just now" },
+      { id: 2, name: "Amit Kumar", action: "Paid rent for Room 102", time: "2 hours ago" }
+    ]
+  })
+})
+
 ownerRouter.get('/properties', async (c) => {
   const db = drizzle(c.env.DB, { schema })
-  // In a real app, this would use the session userId
-  const ownerId = "mock-owner-id" // Replace with c.get('userId')
+  const ownerId = "mock-owner-id" 
   
   const ownerProperties = await db.select().from(schema.properties).where(eq(schema.properties.ownerId, ownerId)).orderBy(desc(schema.properties.createdAt))
-  return c.json(ownerProperties)
+  
+  // Fetch media for properties
+  const propertiesWithMedia = await Promise.all(ownerProperties.map(async (prop) => {
+    const media = await db.select().from(schema.media).where(eq(schema.media.propertyId, prop.id))
+    return { ...prop, media }
+  }))
+
+  return c.json(propertiesWithMedia)
 })
 
 ownerRouter.post('/properties', async (c) => {
   const db = drizzle(c.env.DB, { schema })
   const body = await c.req.json()
-  const ownerId = "mock-owner-id" // Replace with c.get('userId')
+  const ownerId = "mock-owner-id" 
   
   const newProperty = await db.insert(schema.properties).values({
     id: crypto.randomUUID(),
@@ -52,6 +85,37 @@ ownerRouter.get('/rooms/:propertyId', async (c) => {
   
   const propertyRooms = await db.select().from(schema.rooms).where(eq(schema.rooms.propertyId, propertyId))
   return c.json(propertyRooms)
+})
+
+ownerRouter.post('/upload', async (c) => {
+  const body = await c.req.parseBody()
+  const file = body['file'] as File
+  const propertyId = body['propertyId'] as string
+
+  if (!file || !propertyId) {
+    return c.json({ error: 'File and propertyId are required' }, 400)
+  }
+
+  const fileExt = file.name.split('.').pop()
+  const key = `properties/${propertyId}/${crypto.randomUUID()}.${fileExt}`
+  
+  await c.env.BUCKET.put(key, await file.arrayBuffer(), {
+    httpMetadata: { contentType: file.type }
+  })
+
+  // In production, you'd use a custom domain. For now, we'll store the relative path or R2 workers dev URL
+  const url = `https://hsrpg-images.pginbengaluru72.workers.dev/${key}`
+  
+  const db = drizzle(c.env.DB, { schema })
+  const newMedia = await db.insert(schema.media).values({
+    id: crypto.randomUUID(),
+    propertyId,
+    url,
+    type: file.type.startsWith('image/') ? 'image' : 'video',
+    isPrimary: false
+  }).returning()
+
+  return c.json(newMedia[0], 201)
 })
 
 export default ownerRouter

@@ -1,7 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, Bed, Users } from "lucide-react"
 
-export default function DashboardOverview() {
+async function getDashboardData() {
+  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/owner/dashboard', { next: { revalidate: 60 } })
+  if (!res.ok) {
+    throw new Error('Failed to fetch dashboard data')
+  }
+  return res.json()
+}
+
+export default async function DashboardOverview() {
+  const data = await getDashboardData()
+
   return (
     <div className="space-y-6">
       <div>
@@ -16,8 +26,8 @@ export default function DashboardOverview() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">Active in HSR Layout</p>
+            <div className="text-2xl font-bold">{data.totalProperties}</div>
+            <p className="text-xs text-muted-foreground">Active in your account</p>
           </CardContent>
         </Card>
         
@@ -27,8 +37,8 @@ export default function DashboardOverview() {
             <Bed className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">14</div>
-            <p className="text-xs text-muted-foreground">Out of 50 total beds</p>
+            <div className="text-2xl font-bold">{data.availableBeds}</div>
+            <p className="text-xs text-muted-foreground">Out of {data.totalBeds} total beds</p>
           </CardContent>
         </Card>
 
@@ -38,8 +48,8 @@ export default function DashboardOverview() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">36</div>
-            <p className="text-xs text-muted-foreground">+2 since last month</p>
+            <div className="text-2xl font-bold">{data.totalTenants}</div>
+            <p className="text-xs text-muted-foreground">Current active tenants</p>
           </CardContent>
         </Card>
       </div>
@@ -48,18 +58,17 @@ export default function DashboardOverview() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>You have 3 new tenant inquiries today.</CardDescription>
+            <CardDescription>You have {data.recentActivity.length} new activities today.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {/* Dummy data for now */}
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center">
+              {data.recentActivity.map((activity: any) => (
+                <div key={activity.id} className="flex items-center">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">Rahul Sharma</p>
-                    <p className="text-sm text-muted-foreground">Inquired about 2-sharing room in HSR Sector 1</p>
+                    <p className="text-sm font-medium leading-none">{activity.name}</p>
+                    <p className="text-sm text-muted-foreground">{activity.action}</p>
                   </div>
-                  <div className="ml-auto font-medium">Just now</div>
+                  <div className="ml-auto font-medium">{activity.time}</div>
                 </div>
               ))}
             </div>

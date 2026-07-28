@@ -12,5 +12,11 @@
       "database_name": "hsrpg-db",
       "database_id": "64e4e051-182a-4c23-9fb0-65a6b694e7c2"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "hsrpg-images"
+    }
   ]
 }
