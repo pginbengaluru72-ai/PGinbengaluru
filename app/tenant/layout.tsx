@@ -17,52 +17,40 @@ export default function TenantDashboardLayout({ children }: { children: React.Re
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-2 px-2">
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant">
-                          <Home className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Home className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">My Space</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant/saved">
-                          <Bookmark className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant/saved" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Bookmark className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Saved PGs</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant/inquiries">
-                          <MessageSquare className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant/inquiries" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<MessageSquare className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Inquiries & Leads</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant/tickets">
-                          <Wrench className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant/tickets" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Wrench className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Maintenance</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant/receipts">
-                          <FileText className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant/receipts" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<FileText className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Rent Receipts</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/tenant/settings">
-                          <Settings className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/tenant/settings" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Settings className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Profile & KYC</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ShieldAlert, ShieldCheck, User, Building, MapPin, ExternalLink, XCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
-const container = {
+const container: any = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -16,7 +16,7 @@ const container = {
   }
 }
 
-const item = {
+const item: any = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 }
 }

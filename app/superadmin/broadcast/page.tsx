@@ -6,7 +6,7 @@ import { Activity, Send, AlertTriangle, Info, BellRing } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
 
-const container = {
+const container: any = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -16,7 +16,7 @@ const container = {
   }
 }
 
-const item = {
+const item: any = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 }
 }

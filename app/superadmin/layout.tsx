@@ -17,60 +17,46 @@ export default function SuperAdminDashboardLayout({ children }: { children: Reac
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-2 px-2">
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin">
-                          <Home className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Home className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Platform Overview</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/verifications">
-                          <ShieldCheck className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/verifications" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<ShieldCheck className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">KYC & Approvals</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/subscriptions">
-                          <CreditCard className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/subscriptions" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<CreditCard className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">SaaS Revenue</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/reports">
-                          <AlertTriangle className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/reports" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<AlertTriangle className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Reports & Bans</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/localities">
-                          <MapPin className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/localities" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<MapPin className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Manage Localities</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/broadcast">
-                          <Activity className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/broadcast" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Activity className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Global Broadcast</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/superadmin/settings">
-                          <Settings className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/superadmin/settings" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Settings className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">System Settings</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>

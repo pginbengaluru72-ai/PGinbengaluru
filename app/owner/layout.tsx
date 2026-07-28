@@ -17,52 +17,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-2 px-2">
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner">
-                          <Home className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Home className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Overview</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner/properties">
-                          <Building className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner/properties" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Building className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Properties</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner/rooms">
-                          <Bed className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner/rooms" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Bed className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Rooms & Beds</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner/tenants">
-                          <Users className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner/tenants" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Users className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Tenants</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner/billing">
-                          <CreditCard className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner/billing" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<CreditCard className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Billing</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
-                        <Link href="/owner/settings">
-                          <Settings className="mr-3 h-5 w-5" />
+                      <SidebarMenuButton render={<Link href="/owner/settings" />} className="hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors rounded-xl h-11">
+<Settings className="mr-3 h-5 w-5" />
                           <span className="font-medium text-sm">Settings</span>
-                        </Link>
-                      </SidebarMenuButton>
+</SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>

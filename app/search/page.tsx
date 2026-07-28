@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,7 @@ import { MapPin, Bed, CheckCircle, Search, Filter } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
-const container = {
+const container: any = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -21,7 +21,7 @@ const container = {
   }
 }
 
-const item = {
+const item: any = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 }
 }
@@ -33,7 +33,7 @@ type Locality = {
   isActive: boolean
 }
 
-export default function SearchResultsPage() {
+function SearchResultsContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
   const [localities, setLocalities] = useState<Locality[]>([])
@@ -202,5 +202,13 @@ export default function SearchResultsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-500">Loading Search...</div>}>
+      <SearchResultsContent />
+    </Suspense>
   )
 }

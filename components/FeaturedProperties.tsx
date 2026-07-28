@@ -6,7 +6,7 @@ import { MapPin, Bed, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
-const container = {
+const container: any = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -16,7 +16,7 @@ const container = {
   }
 }
 
-const item = {
+const item: any = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 }
