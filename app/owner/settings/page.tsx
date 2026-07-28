@@ -1,148 +1,188 @@
 "use client"
 
 import { useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Settings, QrCode, Phone, Bell, Save, CheckCircle2 } from "lucide-react"
+import { Camera, Edit2, Gem, User, Lock, Users, Shield, HelpCircle, Share2, FileText, ChevronRight, Phone, Mail, MessageSquare, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
 
-export default function SettingsPage() {
-  const [saved, setSaved] = useState(false)
+export default function AccountSettingsPage() {
   const [profile, setProfile] = useState({
-    name: "Ramesh Reddy",
-    email: "ramesh.reddy@hsrpg.in",
-    phone: "+91 98765 43210",
-    upiId: "rameshreddy@upi",
-    whatsappAlerts: true,
-    autoReminders: true
+    name: "Abhishek",
+    email: "abhishekholagunditrading@gmail.com",
+    phone: "9019465897"
   })
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-
   return (
-    <div className="space-y-6 max-w-3xl pb-12">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Owner Settings</h2>
-        <p className="text-muted-foreground text-sm">Configure your personal details, UPI payment receiving ID, and notification alerts.</p>
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-28">
+      <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-5">
+        
+        {/* USER PROFILE HEADER CARD */}
+        <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm p-5">
+          <div className="flex items-center gap-4">
+            {/* Avatar with Camera Overlay */}
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-blue-600 font-black text-white text-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                AB
+              </div>
+              <button className="w-6 h-6 rounded-full bg-blue-600 text-white border-2 border-white dark:border-slate-900 flex items-center justify-center absolute -bottom-1 -right-1 shadow">
+                <Camera className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-0.5">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white leading-tight">{profile.name}</h2>
+              <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                <Mail className="w-3 h-3" /> {profile.email}
+              </p>
+              <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                <Phone className="w-3 h-3" /> {profile.phone}
+              </p>
+            </div>
+
+            <button className="p-2.5 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 transition-colors">
+              <Edit2 className="w-4 h-4" />
+            </button>
+          </div>
+        </Card>
+
+        {/* GO PREMIUM VIBRANT PURPLE BANNER */}
+        <Link href="#" className="block">
+          <div className="p-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white rounded-3xl shadow-lg shadow-purple-500/20 flex items-center justify-between group hover:scale-[1.01] transition-transform">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-yellow-300">
+                <Gem className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-black tracking-tight">Remove Ads · Go Premium</p>
+                <p className="text-xs text-purple-200 font-semibold">Only ₹99/month</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-white/70 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </Link>
+
+        {/* ACTION ITEMS MENU LIST */}
+        <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80">
+          
+          {/* Get Premium */}
+          <Link href="#" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400">
+                <Gem className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Get Premium</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Edit Profile */}
+          <Link href="#" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                <User className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Edit Profile</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Change Password */}
+          <Link href="#" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-pink-50 text-pink-600 dark:bg-pink-950 dark:text-pink-400">
+                <Lock className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Change Password</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Staff Management */}
+          <Link href="/owner/team" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Staff Management</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Manage Team */}
+          <Link href="/owner/team" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400">
+                <Shield className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Manage Team</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Help & Support with Quick Contact Buttons */}
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-400">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Help & Support</span>
+            </div>
+
+            {/* WhatsApp, Call, Email icons */}
+            <div className="flex items-center gap-2">
+              <a 
+                href="https://wa.me/919019465897"
+                target="_blank"
+                rel="noreferrer"
+                className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400 flex items-center justify-center hover:scale-105 transition-transform"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </a>
+
+              <a 
+                href="tel:9019465897"
+                className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-400 flex items-center justify-center hover:scale-105 transition-transform"
+              >
+                <Phone className="w-4 h-4" />
+              </a>
+
+              <a 
+                href="mailto:support@hsrpg.in"
+                className="w-9 h-9 rounded-2xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950 dark:border-red-800 dark:text-red-400 flex items-center justify-center hover:scale-105 transition-transform"
+              >
+                <Mail className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Share App */}
+          <Link href="#" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                <Share2 className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Share App</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          {/* Terms of Service */}
+          <Link href="#" className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-2xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                <FileText className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Terms of Service</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+        </Card>
+
       </div>
-
-      {saved && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center gap-3 text-sm font-bold animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          Settings updated successfully!
-        </div>
-      )}
-
-      <form onSubmit={handleSave} className="space-y-6">
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Personal & Contact Info</CardTitle>
-            <CardDescription>This information is used for tenant communication and lead inquiries.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sName" className="font-bold">Full Name</Label>
-              <Input 
-                id="sName" 
-                value={profile.name} 
-                onChange={e => setProfile({...profile, name: e.target.value})}
-                className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="sEmail" className="font-bold">Email Address</Label>
-                <Input 
-                  id="sEmail" 
-                  type="email"
-                  value={profile.email} 
-                  onChange={e => setProfile({...profile, email: e.target.value})}
-                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sPhone" className="font-bold">WhatsApp / Contact Number</Label>
-                <Input 
-                  id="sPhone" 
-                  value={profile.phone} 
-                  onChange={e => setProfile({...profile, phone: e.target.value})}
-                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-indigo-600" />
-              Direct Rent Payment Gateway (UPI)
-            </CardTitle>
-            <CardDescription>Enter your Google Pay / PhonePe UPI ID to receive 0% brokerage rent directly into your bank.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="sUpi" className="font-bold">UPI VPA (Virtual Payment Address)</Label>
-              <Input 
-                id="sUpi" 
-                value={profile.upiId} 
-                onChange={e => setProfile({...profile, upiId: e.target.value})}
-                placeholder="e.g. yourname@okicici"
-                className="h-11 rounded-xl bg-slate-50 dark:bg-slate-950 font-medium"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-indigo-600" />
-              Automated Notifications
-            </CardTitle>
-            <CardDescription>Manage how you receive tenant inquiries and rent alerts.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">WhatsApp Instant Inquiry Alerts</p>
-                <p className="text-xs text-slate-500">Receive instant WhatsApp alerts whenever a prospective tenant sends an inquiry.</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={profile.whatsappAlerts}
-                onChange={e => setProfile({...profile, whatsappAlerts: e.target.checked})}
-                className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/60 dark:border-slate-800">
-              <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Automatic Rent Due Reminders</p>
-                <p className="text-xs text-slate-500">Automatically ping tenants on the 1st of every month via WhatsApp.</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={profile.autoReminders}
-                onChange={e => setProfile({...profile, autoReminders: e.target.checked})}
-                className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12 px-8 font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
-            <Save className="mr-2 h-4 w-4" /> Save Settings
-          </Button>
-        </div>
-      </form>
     </div>
   )
 }
