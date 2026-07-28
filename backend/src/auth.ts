@@ -7,12 +7,22 @@ export function getAuth(env: { DB: D1Database }) {
   const db = drizzle(env.DB, { schema });
   
   return betterAuth({
+    baseURL: "https://hsrpg-api.pginbengaluru72.workers.dev",
+    trustedOrigins: ["https://pginbengaluru.pages.dev", "http://localhost:3000"],
     database: drizzleAdapter(db, {
       provider: "sqlite",
     }),
     emailAndPassword: {
       enabled: true,
     },
-    // Optional: add Google OAuth or Phone OTP later here
+    advanced: {
+      crossSubDomainCookies: {
+        enabled: true,
+      },
+      defaultCookieAttributes: {
+        sameSite: "none",
+        secure: true
+      }
+    }
   });
 }
