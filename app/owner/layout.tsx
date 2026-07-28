@@ -3,8 +3,6 @@ import { Home, Building, Users, Bed, CreditCard, Settings } from "lucide-react"
 import Link from "next/link"
 import PageTransition from "@/components/PageTransition"
 
-export const runtime = 'edge'
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>

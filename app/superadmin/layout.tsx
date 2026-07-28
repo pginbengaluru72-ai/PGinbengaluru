@@ -3,8 +3,6 @@ import { Home, ShieldCheck, CreditCard, AlertTriangle, Activity, Settings, MapPi
 import Link from "next/link"
 import PageTransition from "@/components/PageTransition"
 
-export const runtime = 'edge'
-
 export default function SuperAdminDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
