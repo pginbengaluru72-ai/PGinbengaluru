@@ -39,9 +39,10 @@ export default function AuthPage() {
         alert(error.message)
       } else {
         // Successful login, redirect based on role
-        if (data?.user?.role === "owner") {
+        const user = data?.user as { role?: string } | undefined
+        if (user?.role === "owner") {
           router.push("/owner")
-        } else if (data?.user?.role === "superadmin") {
+        } else if (user?.role === "superadmin") {
           router.push("/superadmin")
         } else {
           router.push("/tenant")
