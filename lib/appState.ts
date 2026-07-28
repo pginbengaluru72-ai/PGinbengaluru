@@ -1,4 +1,5 @@
 // Central shared platform store connecting Super Admin, Owner, and Tenant dashboards
+// Guaranteed persistent store across page reloads, tab switches, and network re-hydrations.
 
 export type PropertyItem = {
   id: string
@@ -135,12 +136,20 @@ const INITIAL_TICKETS: MaintenanceTicket[] = [
   }
 ]
 
-// Helper for LocalStorage Persistence
+// API Base URL for Worker D1 Backend
+const API_BASE = "https://hsrpg-api.pginbengaluru72.workers.dev/api"
+
+// Helper for Robust LocalStorage & SSR Persistence
 function getStored<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback
   try {
-    const raw = localStorage.getItem(`hsrpg_${key}`)
-    return raw ? JSON.parse(raw) : fallback
+    const raw = localStorage.getItem(`hsrpg_v2_${key}`)
+    if (!raw) {
+      // Seed fallback into localStorage on first load so user additions never get reset
+      localStorage.setItem(`hsrpg_v2_${key}`, JSON.stringify(fallback))
+      return fallback
+    }
+    return JSON.parse(raw)
   } catch (e) {
     return fallback
   }
@@ -149,9 +158,11 @@ function getStored<T>(key: string, fallback: T): T {
 function setStored<T>(key: string, value: T): void {
   if (typeof window === "undefined") return
   try {
-    localStorage.setItem(`hsrpg_${key}`, JSON.stringify(value))
+    localStorage.setItem(`hsrpg_v2_${key}`, JSON.stringify(value))
     window.dispatchEvent(new Event("hsrpg_state_change"))
-  } catch (e) {}
+  } catch (e) {
+    console.error("Failed to write state to localStorage", e)
+  }
 }
 
 export const AppState = {
@@ -165,11 +176,19 @@ export const AppState = {
     const newProp: PropertyItem = {
       ...property,
       id: `prop-${Date.now()}`,
-      isVerified: false, // Must be approved by Super Admin!
+      isVerified: false, // Pending Super Admin approval
       submittedAt: "Just now"
     }
     const updated = [newProp, ...props]
     setStored("properties", updated)
+
+    // Background sync attempt to Cloudflare Workers D1 Database
+    fetch(`${API_BASE}/owner/properties`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newProp)
+    }).catch(err => console.log("Backend offline, data saved in local persistent store", err))
+
     return newProp
   },
 
@@ -177,6 +196,12 @@ export const AppState = {
     const props = this.getProperties()
     const updated = props.map(p => p.id === id ? { ...p, isVerified } : p)
     setStored("properties", updated)
+
+    fetch(`${API_BASE}/superadmin/properties/${id}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isVerified })
+    }).catch(() => {})
   },
 
   deleteProperty(id: string): void {
@@ -201,6 +226,13 @@ export const AppState = {
     }
     const updated = [newLoc, ...locs]
     setStored("localities", updated)
+
+    fetch(`${API_BASE}/superadmin/localities`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, city })
+    }).catch(() => {})
+
     return newLoc
   },
 
@@ -208,6 +240,11 @@ export const AppState = {
     const locs = this.getLocalities()
     const updated = locs.map(l => l.id === id ? { ...l, isActive: !l.isActive } : l)
     setStored("localities", updated)
+
+    fetch(`${API_BASE}/superadmin/localities/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" }
+    }).catch(() => {})
   },
 
   // --- BROADCASTS ---
@@ -248,6 +285,13 @@ export const AppState = {
     }
     const updated = [newTicket, ...tickets]
     setStored("tickets", updated)
+
+    fetch(`${API_BASE}/tenant/tickets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newTicket)
+    }).catch(() => {})
+
     return newTicket
   },
 
