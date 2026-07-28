@@ -26,7 +26,7 @@ export default function SuperAdminLocalitiesPage() {
 
   const fetchLocalities = async () => {
     try {
-      const res = await fetch("http://localhost:8787/api/superadmin/localities")
+      const res = await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/api/superadmin/localities")
       if (res.ok) {
         const data = await res.json()
         setLocalities(data)
@@ -48,7 +48,7 @@ export default function SuperAdminLocalitiesPage() {
 
     setIsSubmitting(true)
     try {
-      const res = await fetch("http://localhost:8787/api/superadmin/localities", {
+      const res = await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/api/superadmin/localities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newLocality)
@@ -66,7 +66,7 @@ export default function SuperAdminLocalitiesPage() {
 
   const toggleLocalityStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`http://localhost:8787/api/superadmin/localities/${id}`, {
+      const res = await fetch(`https://hsrpg-api.pginbengaluru72.workers.dev/api/superadmin/localities/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentStatus })

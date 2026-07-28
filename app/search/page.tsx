@@ -42,7 +42,7 @@ export default function SearchResultsPage() {
   useEffect(() => {
     const fetchLocalities = async () => {
       try {
-        const res = await fetch("http://localhost:8787/api/superadmin/localities")
+        const res = await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/api/superadmin/localities")
         if (res.ok) {
           const data = await res.json()
           setLocalities(data.filter((l: Locality) => l.isActive))
