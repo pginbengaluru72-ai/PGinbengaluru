@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Building, Plus, MapPin } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 async function getProperties() {
   try {

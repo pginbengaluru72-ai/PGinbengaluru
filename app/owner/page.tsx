@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building, Bed, Users } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 async function getDashboardData() {
   try {
