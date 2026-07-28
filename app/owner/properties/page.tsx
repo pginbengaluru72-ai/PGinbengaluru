@@ -5,12 +5,16 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Building, Plus, MapPin } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 async function getProperties() {
-  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties', { next: { revalidate: 0 } })
-  if (!res.ok) {
-    throw new Error('Failed to fetch properties')
+  try {
+    const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties', { cache: 'no-store' })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
   }
-  return res.json()
 }
 
 export default async function PropertiesPage() {

@@ -1,17 +1,30 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, Bed, Users } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 async function getDashboardData() {
-  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/dashboard', { next: { revalidate: 60 } })
-  if (!res.ok) {
-    throw new Error('Failed to fetch dashboard data')
+  try {
+    const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/dashboard', { cache: 'no-store' })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
   }
-  return res.json()
 }
 
 export default async function DashboardOverview() {
   const data = await getDashboardData()
 
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <Building className="w-12 h-12 text-slate-300 mb-4" />
+        <h3 className="text-lg font-medium">Loading Dashboard...</h3>
+        <p className="text-sm text-muted-foreground mt-1">Unable to connect to the API. Please refresh the page.</p>
+      </div>
+    )
+  }
   return (
     <div className="space-y-6">
       <div>
