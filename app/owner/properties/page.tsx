@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Building, Plus, MapPin } from "lucide-react"
 
 async function getProperties() {
-  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/owner/properties', { next: { revalidate: 0 } })
+  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties', { next: { revalidate: 0 } })
   if (!res.ok) {
     throw new Error('Failed to fetch properties')
   }

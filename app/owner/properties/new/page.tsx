@@ -68,7 +68,7 @@ export default function AddPropertyPage() {
     setIsSubmitting(true)
     try {
       // 1. Create Property
-      const res = await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/owner/properties", {
+      const res = await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -85,7 +85,7 @@ export default function AddPropertyPage() {
           formData.append("file", file)
           formData.append("propertyId", newProperty.id)
 
-          await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/owner/upload", {
+          await fetch("https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/upload", {
             method: "POST",
             body: formData
           })

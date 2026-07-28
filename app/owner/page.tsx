@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building, Bed, Users } from "lucide-react"
 
 async function getDashboardData() {
-  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/owner/dashboard', { next: { revalidate: 60 } })
+  const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/dashboard', { next: { revalidate: 60 } })
   if (!res.ok) {
     throw new Error('Failed to fetch dashboard data')
   }
