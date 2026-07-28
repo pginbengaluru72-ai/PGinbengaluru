@@ -3,6 +3,8 @@ import { Home, Bookmark, MessageSquare, Wrench, FileText, Settings } from "lucid
 import Link from "next/link"
 import PageTransition from "@/components/PageTransition"
 
+export const runtime = 'edge'
+
 export default function TenantDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
