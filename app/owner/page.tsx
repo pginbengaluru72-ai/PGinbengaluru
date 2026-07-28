@@ -1,31 +1,38 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building, Bed, Users } from "lucide-react"
+import { Building, Bed, Users, Loader2 } from "lucide-react"
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export default function DashboardOverview() {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-async function getDashboardData() {
-  try {
-    const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/dashboard', { cache: 'no-store' })
-    if (!res.ok) return null
-    return res.json()
-  } catch {
-    return null
+  useEffect(() => {
+    fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/dashboard')
+      .then(res => res.ok ? res.json() : null)
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    )
   }
-}
-
-export default async function DashboardOverview() {
-  const data = await getDashboardData()
 
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <Building className="w-12 h-12 text-slate-300 mb-4" />
-        <h3 className="text-lg font-medium">Loading Dashboard...</h3>
-        <p className="text-sm text-muted-foreground mt-1">Unable to connect to the API. Please refresh the page.</p>
+        <h3 className="text-lg font-medium">Unable to load dashboard</h3>
+        <p className="text-sm text-muted-foreground mt-1">Please refresh the page to try again.</p>
       </div>
     )
   }
+
   return (
     <div className="space-y-6">
       <div>
@@ -72,11 +79,11 @@ export default async function DashboardOverview() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>You have {data.recentActivity.length} new activities today.</CardDescription>
+            <CardDescription>You have {data.recentActivity?.length || 0} new activities today.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              {data.recentActivity.map((activity: any) => (
+              {data.recentActivity?.map((activity: any) => (
                 <div key={activity.id} className="flex items-center">
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">{activity.name}</p>

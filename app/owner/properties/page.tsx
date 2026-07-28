@@ -1,25 +1,29 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { Building, Plus, MapPin } from "lucide-react"
+import { Building, Plus, MapPin, Loader2 } from "lucide-react"
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export default function PropertiesPage() {
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-async function getProperties() {
-  try {
-    const res = await fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties', { cache: 'no-store' })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
-    return []
+  useEffect(() => {
+    fetch('https://hsrpg-api.pginbengaluru72.workers.dev/api/owner/properties')
+      .then(res => res.ok ? res.json() : [])
+      .then(d => { setProperties(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    )
   }
-}
-
-export default async function PropertiesPage() {
-  const properties = await getProperties()
 
   return (
     <div className="space-y-6">
