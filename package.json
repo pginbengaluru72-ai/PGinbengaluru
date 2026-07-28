@@ -33,5 +33,15 @@
     "eslint-plugin-next-on-pages": "^1.13.16",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "next": "$next",
+    "@cloudflare/next-on-pages": {
+      "next": "$next",
+      "@cloudflare/workers-types": "^5.20260722.1"
+    },
+    "wrangler": {
+      "@cloudflare/workers-types": "^5.20260722.1"
+    }
   }
 }
