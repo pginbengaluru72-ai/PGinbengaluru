@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788111850453,
+      "tag": "0000_flawless_karma",
+      "breakpoints": true
+    }
+  ]
+}

@@ -4,31 +4,41 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ShieldCheck, IndianRupee, Users, Building2, MapPin, CheckCircle2, Clock } from "lucide-react"
-import { AppState, PropertyItem } from "@/lib/appState"
+import { adminApi } from "@/lib/apiClient"
 import Link from "next/link"
 
 export default function SuperAdminDashboardOverview() {
-  const [properties, setProperties] = useState<PropertyItem[]>([])
-  const [pendingCount, setPendingCount] = useState(0)
+  const [stats, setStats] = useState({ 
+    totalUsers: 0, totalOwners: 0, totalCustomers: 0,
+    totalProperties: 0, verifiedProperties: 0, pendingProperties: 0,
+    totalBeds: 0, occupiedBeds: 0, availableBeds: 0, occupancyRate: 0 
+  })
+  const [unverifiedProps, setUnverifiedProps] = useState<any[]>([])
 
-  const syncState = () => {
-    const props = AppState.getProperties()
-    setProperties(props)
-    setPendingCount(props.filter(p => !p.isVerified).length)
+  const syncState = async () => {
+    try {
+      const overview = await adminApi.getOverview()
+      if (overview) setStats(overview)
+
+      const verifs = await adminApi.getVerifications()
+      if (verifs?.properties) setUnverifiedProps(verifs.properties)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
     syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
   }, [])
 
-  const handleApprove = (id: string) => {
-    AppState.verifyProperty(id, true)
-    syncState()
+  const handleApprove = async (id: string) => {
+    try {
+      await adminApi.verifyProperty(id)
+      syncState()
+    } catch (e: any) {
+      alert(e.message || "Failed to verify property")
+    }
   }
-
-  const unverifiedProps = properties.filter(p => !p.isVerified)
 
   return (
     <div className="space-y-6 pb-12">
@@ -55,7 +65,7 @@ export default function SuperAdminDashboardOverview() {
             <ShieldCheck className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendingCount}</div>
+            <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{stats.pendingProperties}</div>
             <p className="text-xs text-amber-600 font-medium mt-1">PG listings awaiting physical verification</p>
           </CardContent>
         </Card>
@@ -66,7 +76,7 @@ export default function SuperAdminDashboardOverview() {
             <Users className="h-4 w-4 text-indigo-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">1,204</div>
+            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCustomers}</div>
             <p className="text-xs text-indigo-600 font-medium mt-1">Across all verified properties</p>
           </CardContent>
         </Card>
@@ -77,8 +87,8 @@ export default function SuperAdminDashboardOverview() {
             <Building2 className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{properties.length}</div>
-            <p className="text-xs text-purple-600 font-medium mt-1">{properties.filter(p => p.isVerified).length} Verified Live</p>
+            <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalProperties}</div>
+            <p className="text-xs text-purple-600 font-medium mt-1">{stats.verifiedProperties} Verified Live</p>
           </CardContent>
         </Card>
       </div>
@@ -92,7 +102,7 @@ export default function SuperAdminDashboardOverview() {
             </div>
             <Link href="/superadmin/verifications">
               <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl border-slate-200">
-                View All ({pendingCount})
+                View All ({stats.pendingProperties})
               </Button>
             </Link>
           </CardHeader>
@@ -114,7 +124,7 @@ export default function SuperAdminDashboardOverview() {
                         </span>
                       </p>
                       <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-indigo-500" /> {prop.locality}, {prop.city} • Owner: {prop.ownerName}
+                        <MapPin className="w-3 h-3 text-indigo-500" /> {prop.locality}, {prop.city}
                       </p>
                     </div>
                     <Button 

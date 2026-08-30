@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, User, Loader2, Home } from "lucide-react"
-import { signIn, signUp } from "@/lib/auth"
+import { authApi } from "@/lib/apiClient"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -30,26 +30,22 @@ export default function AuthPage() {
     setIsLoading(true)
     
     try {
-      const { data, error } = await signIn.email({
+      const data = await authApi.login({
         email: loginEmail,
         password: loginPassword,
-      })
+      });
       
-      if (error) {
-        alert(error.message)
+      // Successful login, redirect based on role
+      const user = data?.user;
+      if (user?.role === "OWNER") {
+        router.push("/owner")
+      } else if (user?.role === "SUPER_ADMIN") {
+        router.push("/superadmin")
       } else {
-        // Successful login, redirect based on role
-        const user = data?.user as { role?: string } | undefined
-        if (user?.role === "owner") {
-          router.push("/owner")
-        } else if (user?.role === "superadmin") {
-          router.push("/superadmin")
-        } else {
-          router.push("/tenant")
-        }
+        router.push("/tenant")
       }
-    } catch (err) {
-      alert("An unexpected error occurred.")
+    } catch (err: any) {
+      alert(err.message || "An unexpected error occurred.")
     } finally {
       setIsLoading(false)
     }
@@ -60,22 +56,21 @@ export default function AuthPage() {
     setIsLoading(true)
 
     try {
-      const { data, error } = await signUp.email({
+      await authApi.register({
         email: signupEmail,
         password: signupPassword,
         name: signupName,
-      })
+        role: signupRole === "owner" ? "OWNER" : "CUSTOMER",
+      });
 
-      if (error) {
-        alert(error.message)
+      alert("Account created successfully! You are now logged in.");
+      if (signupRole === "owner") {
+        router.push("/owner");
       } else {
-        // Need to update the user's role because better-auth doesn't natively accept custom fields in standard signup unless configured.
-        // Wait, we can pass custom fields! But since our schema has `role` default 'tenant', let's manually fetch a quick update route if needed.
-        // For this demo, let's just push to the default tenant dashboard.
-        alert("Account created successfully! Please login.")
+        router.push("/tenant");
       }
-    } catch (err) {
-      alert("An unexpected error occurred.")
+    } catch (err: any) {
+      alert(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false)
     }

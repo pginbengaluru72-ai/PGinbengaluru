@@ -10,7 +10,8 @@
     {
       "binding": "DB",
       "database_name": "hsrpg-db",
-      "database_id": "64e4e051-182a-4c23-9fb0-65a6b694e7c2"
+      "database_id": "64e4e051-182a-4c23-9fb0-65a6b694e7c2",
+      "migrations_dir": "drizzle"
     }
   ],
   "r2_buckets": [

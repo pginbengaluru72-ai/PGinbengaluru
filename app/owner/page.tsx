@@ -4,31 +4,28 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Building, Users, Bed, LayoutGrid, Bell, TrendingUp, ShieldAlert, Sparkles, ChevronRight, Trophy, PieChart, Plus, Wrench, CheckCircle2, ArrowDownRight, ArrowUpRight } from "lucide-react"
-import { AppState, PropertyItem, MaintenanceTicket, BroadcastItem } from "@/lib/appState"
+import { ownerApi } from "@/lib/apiClient"
 import Link from "next/link"
 
 export default function DashboardOverview() {
-  const [properties, setProperties] = useState<PropertyItem[]>([])
-  const [broadcasts, setBroadcasts] = useState<BroadcastItem[]>([])
-  const [tickets, setTickets] = useState<MaintenanceTicket[]>([])
+  const [stats, setStats] = useState({ totalProperties: 0, totalBeds: 0, availableBeds: 0, occupiedBeds: 0, occupancyRate: 0 })
+  const [applications, setApplications] = useState<any[]>([])
 
-  const syncState = () => {
-    setProperties(AppState.getProperties())
-    setBroadcasts(AppState.getBroadcasts().filter(b => b.target === "all" || b.target === "owners"))
-    setTickets(AppState.getTickets())
+  const syncState = async () => {
+    try {
+      const dbStats = await ownerApi.getDashboardStats()
+      if (dbStats) setStats(dbStats)
+
+      const appsRes = await ownerApi.getApplications()
+      if (appsRes?.applications) setApplications(appsRes.applications)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
     syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
   }, [])
-
-  const totalBeds = properties.reduce((acc, p) => acc + (p.totalRooms * 2), 0) || 50
-  const availableBeds = properties.reduce((acc, p) => acc + p.availableBeds, 0) || 12
-  const occupiedBeds = totalBeds - availableBeds
-  const totalRooms = properties.reduce((acc, p) => acc + p.totalRooms, 0) || 24
-  const occupancyPercentage = Math.round((occupiedBeds / (totalBeds || 1)) * 100)
 
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-28 space-y-5">
@@ -47,9 +44,8 @@ export default function DashboardOverview() {
           </div>
           <button className="p-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-md rounded-full text-white transition-colors relative">
             <Bell className="w-5 h-5" />
-            {broadcasts.length > 0 && (
-              <span className="w-2.5 h-2.5 bg-red-400 border-2 border-blue-700 rounded-full absolute top-1 right-1" />
-            )}
+            <Bell className="w-5 h-5" />
+            <span className="w-2.5 h-2.5 bg-red-400 border-2 border-blue-700 rounded-full absolute top-1 right-1" />
           </button>
         </div>
 
@@ -59,7 +55,7 @@ export default function DashboardOverview() {
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center mx-auto text-white">
               <Building className="w-4 h-4" />
             </div>
-            <p className="text-lg font-black">{properties.length}</p>
+            <p className="text-lg font-black">{stats.totalProperties}</p>
             <p className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Properties</p>
           </div>
 
@@ -67,7 +63,7 @@ export default function DashboardOverview() {
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center mx-auto text-white">
               <Users className="w-4 h-4" />
             </div>
-            <p className="text-lg font-black">{occupiedBeds}</p>
+            <p className="text-lg font-black">{stats.occupiedBeds}</p>
             <p className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Tenants</p>
           </div>
 
@@ -75,7 +71,7 @@ export default function DashboardOverview() {
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center mx-auto text-white">
               <Bed className="w-4 h-4" />
             </div>
-            <p className="text-lg font-black">{totalBeds}</p>
+            <p className="text-lg font-black">{stats.totalBeds}</p>
             <p className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Beds</p>
           </div>
 
@@ -83,7 +79,7 @@ export default function DashboardOverview() {
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center mx-auto text-white">
               <LayoutGrid className="w-4 h-4" />
             </div>
-            <p className="text-lg font-black">{totalRooms}</p>
+            <p className="text-lg font-black">{stats.totalProperties > 0 ? stats.totalProperties * 4 : 0}</p>
             <p className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Rooms</p>
           </div>
         </div>
@@ -91,16 +87,14 @@ export default function DashboardOverview() {
 
       <div className="max-w-4xl mx-auto px-4 space-y-5">
         
-        {/* SUPER ADMIN BROADCAST ALERT BANNER */}
-        {broadcasts.length > 0 && (
-          <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3 shadow-sm">
-            <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">System Announcement</span>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">{broadcasts[0].message}</p>
-            </div>
+        {/* SYSTEM ANNOUNCEMENT (Mocked for now) */}
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3 shadow-sm">
+          <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">System Announcement</span>
+            <p className="text-xs font-bold text-slate-900 dark:text-white">Welcome to the new StaySure Owner Platform.</p>
           </div>
-        )}
+        </div>
 
         {/* FINANCIAL OVERVIEW CARD */}
         <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -181,14 +175,14 @@ export default function DashboardOverview() {
               <h2 className="font-extrabold text-base text-slate-900 dark:text-white">Occupancy Status</h2>
             </div>
             <span className="text-xs font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full">
-              {occupancyPercentage >= 70 ? 'High' : 'Moderate'}
+              {stats.occupancyRate >= 70 ? 'High' : 'Moderate'}
             </span>
           </div>
 
           <div className="flex items-center justify-between pt-2">
             {/* Donut percentage indicator */}
             <div className="w-28 h-28 rounded-full border-8 border-emerald-500 border-t-slate-200 dark:border-t-slate-800 flex items-center justify-center">
-              <span className="text-xl font-black text-slate-900 dark:text-white">{occupancyPercentage}%</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white">{stats.occupancyRate}%</span>
             </div>
 
             <div className="space-y-2.5 text-xs font-bold w-1/2">
@@ -196,21 +190,21 @@ export default function DashboardOverview() {
                 <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Occupied
                 </span>
-                <span className="text-slate-900 dark:text-white font-black">{occupiedBeds} Beds</span>
+                <span className="text-slate-900 dark:text-white font-black">{stats.occupiedBeds} Beds</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" /> Vacant
                 </span>
-                <span className="text-slate-900 dark:text-white font-black">{availableBeds} Beds</span>
+                <span className="text-slate-900 dark:text-white font-black">{stats.availableBeds} Beds</span>
               </div>
 
               <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
                 <span className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" /> Total Beds
                 </span>
-                <span className="text-slate-900 dark:text-white font-black">{totalBeds} Beds</span>
+                <span className="text-slate-900 dark:text-white font-black">{stats.totalBeds} Beds</span>
               </div>
             </div>
           </div>
@@ -220,22 +214,21 @@ export default function DashboardOverview() {
         <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-amber-500" /> Live Tenant Requests
+              <Users className="w-5 h-5 text-indigo-500" /> Pending Applications
             </h2>
-            <span className="text-xs font-bold text-slate-500">{tickets.length} Active</span>
+            <span className="text-xs font-bold text-slate-500">{applications.length} Active</span>
           </div>
 
           <div className="space-y-2">
-            {tickets.map((t) => (
-              <div key={t.id} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            {applications.length === 0 && <p className="text-xs text-slate-500">No pending applications.</p>}
+            {applications.map((app) => (
+              <div key={app.id} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">{t.tenantName} ({t.room})</p>
-                  <p className="text-[11px] text-slate-500">{t.issue}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{app.customerName}</p>
+                  <p className="text-[11px] text-slate-500">{app.propertyName}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  t.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                }`}>
-                  {t.status}
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800`}>
+                  {app.status}
                 </span>
               </div>
             ))}

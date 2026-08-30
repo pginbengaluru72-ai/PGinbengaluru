@@ -1,43 +1,93 @@
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { getAuth } from './auth'
-import superadminRouter from './routes/superadmin'
-import ownerRouter from './routes/owner'
-import tenantRouter from './routes/tenant'
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { requestId } from './lib/middleware';
+import authRouter from './routes/auth';
+import ownerRouter from './routes/owner';
+import superadminRouter from './routes/superadmin';
+import tenantRouter from './routes/tenant';
 
 type Bindings = {
-  DB: D1Database
-}
+  DB: D1Database;
+  BUCKET: R2Bucket;
+};
 
-const app = new Hono<{ Bindings: Bindings }>()
+type Variables = {
+  user: import('./lib/middleware').AuthUser;
+  requestId: string;
+};
 
-// CORS for cross-domain API calls
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// ============================================================
+// GLOBAL MIDDLEWARE
+// ============================================================
+
+// Security headers
+app.use('*', secureHeaders());
+
+// Request ID for tracing
+app.use('*', requestId());
+
+// CORS — strict origin allowlist
 app.use('*', cors({
-  origin: ['https://pginbengaluru.pages.dev', 'http://localhost:3000'],
-  allowHeaders: ['Content-Type', 'Authorization', 'x-client-info', 'x-better-auth-timezone'],
-  allowMethods: ['POST', 'GET', 'OPTIONS'],
-  exposeHeaders: ['Content-Length'],
+  origin: [
+    'https://pginbengaluru.pages.dev',
+    'http://localhost:5173', // Vite dev
+    'http://localhost:3000',
+  ],
+  allowHeaders: ['Content-Type'],
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true,
-}))
+  maxAge: 86400,
+}));
 
-// Basic health check route
-app.get('/', (c) => {
-  return c.text('HSRPG API is running!')
-})
+// ============================================================
+// ROUTES
+// ============================================================
 
-// Better Auth endpoints
-app.on(['POST', 'GET'], '/api/auth/**', (c) => {
-  const auth = getAuth(c.env)
-  return auth.handler(c.req.raw)
-})
+// Health check
+app.get('/', (c) => c.json({ status: 'ok', service: 'StaySure API', version: '2.0.0' }));
 
-// Super Admin endpoints
-app.route('/api/superadmin', superadminRouter)
+// Auth (public + protected)
+app.route('/api/auth', authRouter);
 
-// Owner endpoints
-app.route('/api/owner', ownerRouter)
+// Owner APIs (requires OWNER role)
+app.route('/api/owner', ownerRouter);
 
-// Tenant endpoints
-app.route('/api/tenant', tenantRouter)
+// Admin APIs (requires SUPER_ADMIN role)
+app.route('/api/admin', superadminRouter);
 
-export default app
+// Customer/Tenant APIs
+app.route('/api/customer', tenantRouter);
+
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+app.onError((err, c) => {
+  const requestId = c.get('requestId') || 'unknown';
+  console.error(`[${requestId}] Unhandled error:`, err.message);
+  
+  return c.json({
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred. Please try again later.',
+      requestId,
+    }
+  }, 500);
+});
+
+// 404 handler
+app.notFound((c) => {
+  return c.json({
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: 'The requested endpoint does not exist.',
+    }
+  }, 404);
+});
+
+export default app;

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { MapPin, Bed, CheckCircle, Search, Filter, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { AppState, PropertyItem, LocalityItem } from "@/lib/appState"
+import { customerApi } from "@/lib/apiClient"
 
 const container: any = {
   hidden: { opacity: 0 },
@@ -28,19 +28,26 @@ const item: any = {
 function SearchResultsContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
-  const [localities, setLocalities] = useState<LocalityItem[]>([])
-  const [properties, setProperties] = useState<PropertyItem[]>([])
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const syncState = () => {
-    setLocalities(AppState.getLocalities().filter(l => l.isActive))
-    setProperties(AppState.getProperties())
+  const syncState = async () => {
+    try {
+      setLoading(true)
+      const res = await customerApi.searchProperties(query ? { query } : {})
+      if (res?.properties) {
+        setProperties(res.properties)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
-  }, [])
+  }, [query])
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-10 pb-20 relative overflow-hidden">
@@ -79,13 +86,8 @@ function SearchResultsContent() {
 
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Super Admin Coverage</Label>
-                <div className="space-y-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {localities.map((loc) => (
-                    <label key={loc.id} className="flex items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 transition-colors">
-                      <input type="checkbox" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
-                      {loc.name} ({loc.city.split(',')[0]})
-                    </label>
-                  ))}
+                <div className="space-y-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar text-xs font-bold text-slate-500">
+                  Filters are currently disabled while we fetch data directly from the verified database.
                 </div>
               </div>
 
@@ -111,13 +113,18 @@ function SearchResultsContent() {
               animate="show"
               className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
             >
+              {properties.length === 0 && !loading && (
+                <div className="col-span-full py-12 text-center text-slate-500 font-bold">
+                  No properties found. Try a different search query.
+                </div>
+              )}
               {properties.map((prop, idx) => (
                 <motion.div variants={item} key={prop.id}>
-                  <Link href={`/pg/1`} className="group block h-full">
+                  <Link href={`/pg/${prop.publicId}`} className="group block h-full">
                     <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex flex-col border border-slate-200/60 dark:border-slate-800">
                       <div className="relative h-52 overflow-hidden bg-slate-200 shrink-0">
                         <img 
-                          src={prop.media && prop.media.length > 0 ? prop.media[0].url : "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"} 
+                          src={prop.primaryPhotoUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"} 
                           alt={prop.name} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
@@ -127,7 +134,7 @@ function SearchResultsContent() {
                             prop.isVerified ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
                           }`}>
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            {prop.isVerified ? 'Super Admin Verified' : 'Pending Verification'}
+                            {prop.status === 'VERIFIED' ? 'Super Admin Verified' : 'Pending Verification'}
                           </Badge>
                         </div>
                         <div className="absolute bottom-3 left-3 z-10">

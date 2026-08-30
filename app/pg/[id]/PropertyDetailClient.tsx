@@ -8,14 +8,27 @@ import { MapPin, ShieldCheck, Wifi, Snowflake, Coffee, Tv, MessageCircle, Chevro
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Turnstile } from "@marsidev/react-turnstile"
+import { customerApi } from "@/lib/apiClient"
+import { useEffect } from "react"
 
 export default function PropertyDetailClient({ id }: { id: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [property, setProperty] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const [message, setMessage] = useState("")
+
+  useEffect(() => {
+    customerApi.getPropertyDetail(id)
+      .then(res => setProperty(res?.property))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [id])
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!turnstileToken) {
       alert("Please complete the security check.")
@@ -23,20 +36,37 @@ export default function PropertyDetailClient({ id }: { id: string }) {
     }
     
     setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      await customerApi.applyForPg({
+        propertyId: property?.id,
+        preferredRoomType: "Standard",
+        preferredMoveIn: new Date().toISOString().split('T')[0],
+        message: message
+      })
       setIsSuccess(true)
       setTimeout(() => setIsModalOpen(false), 2000)
-    }, 1500)
+    } catch (e: any) {
+      alert(e.message || "Failed to submit inquiry.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-  
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center font-bold">Loading...</div>
+  }
+
+  if (!property) {
+    return <div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Property not found.</div>
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 p-4 flex items-center justify-between">
-        <Link href="/search?q=HSR" className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-slate-100 text-slate-900 hover:bg-slate-200 h-10 w-10 transition-colors">
+        <Link href="/search?q=" className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-slate-100 text-slate-900 hover:bg-slate-200 h-10 w-10 transition-colors">
           <ChevronLeft className="h-6 w-6" />
         </Link>
-        <div className="font-bold text-lg text-slate-900 tracking-tight">Sunrise Premium PG</div>
+        <div className="font-bold text-lg text-slate-900 tracking-tight">{property.name}</div>
         <div className="w-10"></div>
       </div>
 
@@ -45,16 +75,14 @@ export default function PropertyDetailClient({ id }: { id: string }) {
         animate={{ opacity: 1 }}
         className="w-full h-[40vh] md:h-[60vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
       >
-        {[1, 2, 3].map((img) => (
-          <div key={img} className="w-full shrink-0 snap-center relative">
-            <img 
-              src={`https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop`} 
-              alt="Room view" 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-          </div>
-        ))}
+        <div className="w-full shrink-0 snap-center relative">
+          <img 
+            src={property.primaryPhotoUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"} 
+            alt="Room view" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        </div>
       </motion.div>
 
       <div className="max-w-4xl mx-auto px-6 -mt-16 relative z-10">
@@ -68,20 +96,20 @@ export default function PropertyDetailClient({ id }: { id: string }) {
           <div className="flex flex-col md:flex-row md:justify-between items-start gap-6">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 flex items-center gap-1.5 py-1.5 px-3 rounded-xl font-bold">
-                  <ShieldCheck className="h-4 w-4" /> Physically Verified
+                <Badge className={`${property.status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-100 text-amber-700 hover:bg-amber-100'} border-0 flex items-center gap-1.5 py-1.5 px-3 rounded-xl font-bold`}>
+                  <ShieldCheck className="h-4 w-4" /> {property.status === 'VERIFIED' ? 'Physically Verified' : 'Pending Verification'}
                 </Badge>
-                <Badge variant="outline" className="text-slate-600 border-slate-200 py-1.5 px-3 rounded-xl font-bold">Boys Only</Badge>
+                <Badge variant="outline" className="text-slate-600 border-slate-200 py-1.5 px-3 rounded-xl font-bold capitalize">{property.type} PG</Badge>
               </div>
-              <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Sunrise Premium PG</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">{property.name}</h1>
               <div className="flex items-center text-slate-500 font-medium mt-3 text-lg">
                 <MapPin className="h-5 w-5 mr-2 text-indigo-500" />
-                Sector 2, HSR Layout, Bengaluru
+                {property.address}, {property.locality}, {property.city}
               </div>
             </div>
             <div className="text-left md:text-right bg-slate-50 md:bg-transparent p-4 md:p-0 rounded-2xl md:rounded-none w-full md:w-auto">
               <span className="text-sm font-bold text-indigo-600 uppercase tracking-wider block mb-1">Starts at</span>
-              <span className="font-black text-4xl text-slate-900">₹8,500<span className="text-lg font-medium text-slate-500">/mo</span></span>
+              <span className="font-black text-4xl text-slate-900">₹{property.startingPrice}<span className="text-lg font-medium text-slate-500">/mo</span></span>
             </div>
           </div>
 
@@ -233,7 +261,12 @@ export default function PropertyDetailClient({ id }: { id: string }) {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-slate-700">Message (Optional)</label>
-                      <textarea className="w-full rounded-xl bg-slate-50 border border-slate-200 p-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-medium resize-none h-24" placeholder="I am interested in the Double Sharing AC room..." />
+                      <textarea 
+                        className="w-full rounded-xl bg-slate-50 border border-slate-200 p-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all font-medium resize-none h-24" 
+                        placeholder="I am interested in..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                      />
                     </div>
                     
                     <div className="flex justify-center py-2">
