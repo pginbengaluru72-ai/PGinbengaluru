@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Wrench, Plus, CheckCircle2, AlertCircle, Clock, Sparkles } from "lucide-react"
-import { Wrench, Plus, CheckCircle2, AlertCircle, Clock, Sparkles } from "lucide-react"
 
 export default function TenantTicketsPage() {
   const [tickets, setTickets] = useState<any[]>([])
