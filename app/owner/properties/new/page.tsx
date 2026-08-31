@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2, Plus, Star, Search, Check, Sparkles, MapPin, Building, Shield, Wifi, Car, Utensils, Shirt, Video, Zap, Droplets, Dumbbell } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Star, Search, Check, Sparkles, MapPin, Building, Shield, Wifi, Car, Utensils, Shirt, Video, Zap, Droplets, Dumbbell, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ownerApi } from "@/lib/apiClient"
@@ -14,7 +14,7 @@ export default function AddPropertyPage() {
   const router = useRouter()
   const [localities, setLocalities] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [images, setImages] = useState<string[]>([])
+  const [images, setImages] = useState<{file: File, previewUrl: string}[]>([])
   
   // Facilities state with switches
   const [facilities, setFacilities] = useState({
@@ -65,15 +65,24 @@ export default function AddPropertyPage() {
     setFacilities(prev => ({ ...prev, [facilityKey]: !prev[facilityKey] }))
   }
 
-  const handleSimulateImageUpload = () => {
-    if (images.length >= 10) return
-    const samplePhotos = [
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2069&auto=format&fit=crop"
-    ]
-    const nextPhoto = samplePhotos[images.length % samplePhotos.length]
-    setImages(prev => [...prev, nextPhoto])
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).slice(0, 10 - images.length);
+      const newImages = newFiles.map(file => ({
+        file,
+        previewUrl: URL.createObjectURL(file)
+      }));
+      setImages(prev => [...prev, ...newImages]);
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const newImages = [...prev];
+      URL.revokeObjectURL(newImages[index].previewUrl);
+      newImages.splice(index, 1);
+      return newImages;
+    });
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,8 +109,15 @@ export default function AddPropertyPage() {
         listPublicly: formData.listPublicly
       })
 
-      // Ideally we would also upload images here using ownerApi.uploadMedia and ownerApi.submitProperty
+      // Upload actual images
       if (res?.property) {
+        for (const img of images) {
+          try {
+            await ownerApi.uploadMedia(res.property.id, img.file);
+          } catch (err) {
+            console.error("Failed to upload image", err);
+          }
+        }
         await ownerApi.submitProperty(res.property.id)
       }
 
@@ -141,20 +157,29 @@ export default function AddPropertyPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {/* Add Image Card */}
-              <div 
-                onClick={handleSimulateImageUpload}
+              <label 
                 className="h-36 rounded-2xl border-2 border-dashed border-blue-400 dark:border-blue-600 bg-blue-50/40 dark:bg-blue-950/20 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors group"
               >
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/jpeg, image/png, image/webp" 
+                  className="hidden" 
+                  onChange={handleFileChange} 
+                />
                 <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                   <Plus className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-2">Add Image</span>
-              </div>
+              </label>
 
               {/* Uploaded Images */}
-              {images.map((imgUrl, i) => (
+              {images.map((img, i) => (
                 <div key={i} className="h-36 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-slate-800 group shadow-sm">
-                  <img src={imgUrl} alt={`Property ${i}`} className="w-full h-full object-cover" />
+                  <img src={img.previewUrl} alt={`Property ${i}`} className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => removeImage(i)} className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-4 h-4" />
+                  </button>
                   {i === 0 && (
                     <div className="absolute top-2 left-2 bg-yellow-400 text-slate-900 font-bold text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
                       <Star className="w-3 h-3 fill-slate-900" /> Cover
