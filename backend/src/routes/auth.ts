@@ -25,7 +25,7 @@ function setSessionCookie(c: any, token: string, maxAge: number) {
   setCookie(c, 'staysure_session', token, {
     httpOnly: true,
     secure: true,
-    sameSite: 'Lax',
+    sameSite: 'None',
     path: '/',
     maxAge: Math.floor(maxAge / 1000),
   });
@@ -196,7 +196,7 @@ authRouter.post('/login', async (c) => {
 // POST /api/auth/logout
 // ============================================================
 authRouter.post('/logout', requireAuth(), async (c) => {
-  deleteCookie(c, 'staysure_session', { path: '/' });
+  deleteCookie(c, 'staysure_session', { path: '/', secure: true, sameSite: 'None' });
   return apiSuccess(c, { message: 'Logged out successfully.' });
 });
 
