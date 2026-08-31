@@ -50,6 +50,7 @@ export const authApi = {
   register: (data: any) => fetchApi<any>('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   logout: () => fetchApi<any>('/api/auth/logout', { method: 'POST' }),
   getMe: () => fetchApi<any>('/api/auth/me', { method: 'GET' }),
+  updateProfile: (data: any) => fetchApi<any>('/api/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
   changePassword: (data: any) => fetchApi<any>('/api/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
 };
 

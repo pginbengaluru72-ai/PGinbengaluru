@@ -252,4 +252,29 @@ authRouter.post('/change-password', requireAuth(), async (c) => {
   return apiSuccess(c, { message: 'Password changed successfully.' });
 });
 
+// ============================================================
+// PUT /api/auth/profile — Update user profile
+// ============================================================
+authRouter.put('/profile', requireAuth(), async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body) return apiError(c, 400, 'INVALID_BODY', 'Invalid request body.');
+
+  const { name, phone } = body;
+  
+  if (name && (typeof name !== 'string' || name.trim().length < 2)) {
+    return apiError(c, 400, 'INVALID_NAME', 'Name must be at least 2 characters.');
+  }
+
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const updateData: any = { updatedAt: new Date() };
+  if (name !== undefined) updateData.name = name.trim();
+  if (phone !== undefined) updateData.phone = phone.trim() || null;
+
+  await db.update(schema.users).set(updateData).where(eq(schema.users.id, user.id));
+
+  return apiSuccess(c, { message: 'Profile updated successfully.' });
+});
+
 export default authRouter;
