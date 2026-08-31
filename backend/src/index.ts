@@ -29,13 +29,20 @@ app.use('*', secureHeaders());
 // Request ID for tracing
 app.use('*', requestId());
 
-// CORS — strict origin allowlist
+// CORS — dynamic origin to support Pages preview URLs
 app.use('*', cors({
-  origin: [
-    'https://pginbengaluru.pages.dev',
-    'http://localhost:5173', // Vite dev
-    'http://localhost:3000',
-  ],
+  origin: (origin) => {
+    if (!origin) return 'https://pginbengaluru.pages.dev';
+    const allowed = [
+      'https://pginbengaluru.pages.dev',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+    if (allowed.includes(origin)) return origin;
+    // Allow all Cloudflare Pages preview subdomains
+    if (origin.endsWith('.pginbengaluru.pages.dev')) return origin;
+    return 'https://pginbengaluru.pages.dev';
+  },
   allowHeaders: ['Content-Type'],
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true,

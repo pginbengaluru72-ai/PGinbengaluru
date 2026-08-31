@@ -1,6 +1,6 @@
 // Frontend API Client for communicating with the Hono backend
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'; // Worker dev port is usually 8787
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://hsrpg-api.pginbengaluru72.workers.dev';
 
 export class ApiError extends Error {
   code: string;
