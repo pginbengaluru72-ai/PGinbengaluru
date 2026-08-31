@@ -106,4 +106,7 @@ export const customerApi = {
   applyForPg: (data: any) => fetchApi<any>('/api/customer/applications', { method: 'POST', body: JSON.stringify(data) }),
   getMyApplications: () => fetchApi<any>('/api/customer/applications', { method: 'GET' }),
   saveToFavorites: (propertyId: string) => fetchApi<any>('/api/customer/favorites', { method: 'POST', body: JSON.stringify({ propertyId }) }),
+  getMyFavorites: () => fetchApi<any>('/api/customer/favorites', { method: 'GET' }),
+  getTickets: () => fetchApi<any>('/api/customer/complaints', { method: 'GET' }),
+  createTicket: (data: any) => fetchApi<any>('/api/customer/complaints', { method: 'POST', body: JSON.stringify(data) }),
 };

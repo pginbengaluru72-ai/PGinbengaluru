@@ -213,4 +213,76 @@ customerRouter.post('/favorites', requireAuth(), requireRole('CUSTOMER'), async 
   return apiSuccess(c, { message: 'Saved to favorites.' }, 201);
 });
 
+// ============================================================
+// PROTECTED: GET /api/customer/favorites — Get saved PGs
+// ============================================================
+customerRouter.get('/favorites', requireAuth(), requireRole('CUSTOMER'), async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const favs = await db.select({
+    id: schema.favorites.id,
+    propertyId: schema.properties.id,
+    publicId: schema.properties.publicId,
+    name: schema.properties.name,
+    locality: schema.properties.locality,
+    city: schema.properties.city,
+    type: schema.properties.type,
+    startingPrice: schema.properties.startingPrice,
+    createdAt: schema.favorites.createdAt,
+  }).from(schema.favorites)
+    .innerJoin(schema.properties, eq(schema.favorites.propertyId, schema.properties.id))
+    .where(eq(schema.favorites.customerId, user.id))
+    .orderBy(desc(schema.favorites.createdAt));
+
+  return apiSuccess(c, { favorites: favs });
+});
+
+// ============================================================
+// PROTECTED: GET /api/customer/complaints — Get Maintenance Tickets
+// ============================================================
+customerRouter.get('/complaints', requireAuth(), requireRole('CUSTOMER'), async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const tickets = await db.select({
+    id: schema.complaints.publicId,
+    subject: schema.complaints.subject,
+    description: schema.complaints.description,
+    status: schema.complaints.status,
+    createdAt: schema.complaints.createdAt,
+    resolvedAt: schema.complaints.resolvedAt,
+  }).from(schema.complaints)
+    .where(eq(schema.complaints.reporterId, user.id))
+    .orderBy(desc(schema.complaints.createdAt));
+
+  return apiSuccess(c, { tickets });
+});
+
+// ============================================================
+// PROTECTED: POST /api/customer/complaints — Raise Ticket
+// ============================================================
+customerRouter.post('/complaints', requireAuth(), requireRole('CUSTOMER'), async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json().catch(() => null);
+  if (!body?.subject || !body?.description) return apiError(c, 400, 'MISSING_FIELDS', 'subject and description are required.');
+
+  const db = drizzle(c.env.DB, { schema });
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+
+  await db.insert(schema.complaints).values({
+    id: crypto.randomUUID(),
+    publicId: `STY-TKT-${timestamp}${random}`.toUpperCase(),
+    reporterId: user.id,
+    subject: body.subject.trim(),
+    description: body.description.trim(),
+    status: 'OPEN',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  return apiSuccess(c, { message: 'Ticket raised successfully.' }, 201);
+});
+
 export default customerRouter;
