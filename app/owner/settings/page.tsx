@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { authApi } from "@/lib/apiClient"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,10 +11,28 @@ import Link from "next/link"
 
 export default function AccountSettingsPage() {
   const [profile, setProfile] = useState({
-    name: "Abhishek",
-    email: "abhishekholagunditrading@gmail.com",
-    phone: "9019465897"
+    name: "Loading...",
+    email: "Loading...",
+    phone: "Loading..."
   })
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await authApi.getMe()
+        if (res?.user) {
+          setProfile({
+            name: res.user.name || "Owner",
+            email: res.user.email || "",
+            phone: res.user.phone || "No phone added"
+          })
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchUser()
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-28">
@@ -25,7 +44,7 @@ export default function AccountSettingsPage() {
             {/* Avatar with Camera Overlay */}
             <div className="relative">
               <div className="w-16 h-16 rounded-2xl bg-blue-600 font-black text-white text-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                AB
+                {profile.name !== "Loading..." ? profile.name.charAt(0).toUpperCase() : "U"}
               </div>
               <button className="w-6 h-6 rounded-full bg-blue-600 text-white border-2 border-white dark:border-slate-900 flex items-center justify-center absolute -bottom-1 -right-1 shadow">
                 <Camera className="w-3 h-3" />

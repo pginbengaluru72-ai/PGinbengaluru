@@ -4,15 +4,19 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Building, Users, Bed, LayoutGrid, Bell, TrendingUp, ShieldAlert, Sparkles, ChevronRight, Trophy, PieChart, Plus, Wrench, CheckCircle2, ArrowDownRight, ArrowUpRight } from "lucide-react"
-import { ownerApi } from "@/lib/apiClient"
+import { ownerApi, authApi } from "@/lib/apiClient"
 import Link from "next/link"
 
 export default function DashboardOverview() {
   const [stats, setStats] = useState({ totalProperties: 0, totalBeds: 0, availableBeds: 0, occupiedBeds: 0, occupancyRate: 0 })
   const [applications, setApplications] = useState<any[]>([])
+  const [userName, setUserName] = useState("Owner")
 
   const syncState = async () => {
     try {
+      const authRes = await authApi.getMe()
+      if (authRes?.user?.name) setUserName(authRes.user.name)
+
       const dbStats = await ownerApi.getDashboardStats()
       if (dbStats) setStats(dbStats)
 
@@ -35,11 +39,11 @@ export default function DashboardOverview() {
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 font-black text-white flex items-center justify-center text-lg shadow-inner">
-              AB
+              {userName.charAt(0).toUpperCase()}
             </div>
             <div>
               <p className="text-xs text-blue-100 font-medium">Good Evening 🌙</p>
-              <h1 className="text-2xl font-black tracking-tight">Abhishek</h1>
+              <h1 className="text-2xl font-black tracking-tight">{userName}</h1>
             </div>
           </div>
           <button className="p-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-md rounded-full text-white transition-colors relative">

@@ -5,34 +5,33 @@ import { Button } from "@/components/ui/button"
 import { Activity, Send, AlertTriangle, Info, BellRing, Building, Users, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
-import { AppState, BroadcastItem } from "@/lib/appState"
 
 export default function BroadcastPage() {
-  const [broadcasts, setBroadcasts] = useState<BroadcastItem[]>([])
+  const [broadcasts, setBroadcasts] = useState<any[]>([
+    { id: '1', level: 'warning', target: 'all', message: 'Platform maintenance scheduled for tonight at 2 AM.', createdAt: 'Just now' },
+    { id: '2', level: 'info', target: 'owners', message: 'New property verification process is now live.', createdAt: 'Yesterday' }
+  ])
   const [selectedAudience, setSelectedAudience] = useState<"all" | "owners" | "tenants">("all")
   const [level, setLevel] = useState<"info" | "warning">("info")
   const [message, setMessage] = useState("")
   const [sentNotice, setSentNotice] = useState(false)
 
-  const syncState = () => {
-    setBroadcasts(AppState.getBroadcasts())
-  }
-
-  useEffect(() => {
-    syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
-  }, [])
-
   const handleSendBroadcast = (e: React.FormEvent) => {
     e.preventDefault()
     if (!message.trim()) return
 
-    AppState.addBroadcast(selectedAudience, level, message.trim())
+    const newBroadcast = {
+      id: Date.now().toString(),
+      level,
+      target: selectedAudience,
+      message: message.trim(),
+      createdAt: 'Just now'
+    }
+
+    setBroadcasts(prev => [newBroadcast, ...prev])
     setMessage("")
     setSentNotice(true)
     setTimeout(() => setSentNotice(false), 3000)
-    syncState()
   }
 
   return (

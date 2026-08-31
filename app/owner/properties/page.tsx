@@ -5,20 +5,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Building, Plus, MapPin, X, CheckCircle2, Phone, Bed, Trash2, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react"
-import { AppState, PropertyItem } from "@/lib/appState"
+import { ownerApi } from "@/lib/apiClient"
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<PropertyItem[]>([])
-  const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(null)
+  const [properties, setProperties] = useState<any[]>([])
+  const [selectedProperty, setSelectedProperty] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const syncState = () => {
-    setProperties(AppState.getProperties())
+  const syncState = async () => {
+    try {
+      const res = await ownerApi.getProperties()
+      if (res?.properties) {
+        setProperties(res.properties)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
   }, [])
 
   return (
@@ -35,6 +43,12 @@ export default function PropertiesPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {loading && <div className="text-slate-500 font-bold p-4">Loading properties...</div>}
+        {!loading && properties.length === 0 && (
+          <div className="col-span-full text-slate-500 font-bold p-8 bg-slate-50 dark:bg-slate-900 border rounded-2xl border-dashed border-slate-300 dark:border-slate-800 text-center">
+            You haven't listed any properties yet.
+          </div>
+        )}
         {properties.map((property) => (
           <Card key={property.id} className="overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
@@ -50,9 +64,9 @@ export default function PropertiesPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-2 space-y-3">
-              {property.media && property.media.length > 0 && (
+              {property.primaryPhotoUrl && (
                 <div className="w-full h-40 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 relative">
-                  <img src={property.media[0].url} alt={property.name} className="w-full h-full object-cover" />
+                  <img src={property.primaryPhotoUrl} alt={property.name} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex items-center justify-between text-xs font-semibold pt-1">
@@ -62,12 +76,16 @@ export default function PropertiesPage() {
               <div className="flex items-center justify-between text-xs font-semibold">
                 <span className="text-slate-500">Super Admin Status:</span>
                 <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-md ${
-                  property.isVerified 
+                  property.status === 'VERIFIED' || property.status === 'PUBLISHED'
                     ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-bold' 
+                    : property.status === 'REJECTED'
+                    ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 font-bold'
                     : 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 font-bold'
                 }`}>
-                  {property.isVerified ? (
+                  {property.status === 'VERIFIED' || property.status === 'PUBLISHED' ? (
                     <> <ShieldCheck className="w-3.5 h-3.5" /> Verified Live </>
+                  ) : property.status === 'REJECTED' ? (
+                    <> <X className="w-3.5 h-3.5" /> Rejected </>
                   ) : (
                     <> <ShieldAlert className="w-3.5 h-3.5" /> Pending Review </>
                   )}
@@ -113,8 +131,8 @@ export default function PropertiesPage() {
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/60 dark:border-slate-800">
                   <span className="text-slate-500 block">Super Admin Status</span>
-                  <span className={`font-bold ${selectedProperty.isVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {selectedProperty.isVerified ? 'Verified & Active' : 'Pending Verification'}
+                  <span className={`font-bold ${selectedProperty.status === 'VERIFIED' || selectedProperty.status === 'PUBLISHED' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {selectedProperty.status === 'VERIFIED' || selectedProperty.status === 'PUBLISHED' ? 'Verified & Active' : 'Pending Verification'}
                   </span>
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/60 dark:border-slate-800">
@@ -124,7 +142,7 @@ export default function PropertiesPage() {
               </div>
 
               <div className="pt-2 flex flex-col gap-2">
-                <Link href={`/pg/1`} className="w-full">
+                <Link href={`/pg/${selectedProperty.publicId}`} className="w-full">
                   <Button variant="outline" className="w-full rounded-xl h-11 font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800">
                     <ExternalLink className="w-4 h-4 mr-2 text-indigo-500" /> View Public Tenant Listing Page
                   </Button>

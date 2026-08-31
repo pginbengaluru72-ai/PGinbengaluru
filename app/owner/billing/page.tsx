@@ -14,11 +14,7 @@ export default function BillingPage() {
   const [selectedMonth, setSelectedMonth] = useState("Jul")
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const [transactions, setTransactions] = useState([
-    { id: "tx-1", tenantName: "Rahul Sharma", room: "Room 101", amount: 10500, date: "28 Jul 2026", type: "Income", status: "Completed" },
-    { id: "tx-2", tenantName: "Electricity Bill", room: "PG Expense", amount: 4500, date: "26 Jul 2026", type: "Expense", status: "Completed" },
-    { id: "tx-3", tenantName: "Amit Kumar", room: "Room 102", amount: 8500, date: "01 Jul 2026", type: "Income", status: "Pending" }
-  ])
+  const [transactions, setTransactions] = useState<any[]>([])
 
   const [newTx, setNewTx] = useState({
     tenantName: "",
@@ -27,10 +23,10 @@ export default function BillingPage() {
     type: "Income" as "Income" | "Expense"
   })
 
-  const totalIncome = transactions.filter(t => t.type === "Income" && t.status === "Completed").reduce((sum, t) => sum + t.amount, 0) || 65000
-  const totalExpenses = transactions.filter(t => t.type === "Expense" && t.status === "Completed").reduce((sum, t) => sum + t.amount, 0) || 22500
+  const totalIncome = transactions.filter(t => t.type === "Income" && t.status === "Completed").reduce((sum, t) => sum + t.amount, 0)
+  const totalExpenses = transactions.filter(t => t.type === "Expense" && t.status === "Completed").reduce((sum, t) => sum + t.amount, 0)
   const netProfit = totalIncome - totalExpenses
-  const totalPending = transactions.filter(t => t.status === "Pending").reduce((sum, t) => sum + t.amount, 0) || 8500
+  const totalPending = transactions.filter(t => t.status === "Pending").reduce((sum, t) => sum + t.amount, 0)
 
   const handleRecordTransaction = (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,6 +209,11 @@ export default function BillingPage() {
           </div>
 
           <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+            {transactions.length === 0 && (
+              <div className="p-8 text-center text-slate-500 font-medium">
+                No transactions recorded yet.
+              </div>
+            )}
             {transactions.map(t => (
               <div key={t.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">

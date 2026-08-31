@@ -8,35 +8,33 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Plus, Map, CheckCircle2, XCircle } from "lucide-react"
-import { AppState, LocalityItem } from "@/lib/appState"
 
 export default function SuperAdminLocalitiesPage() {
-  const [localities, setLocalities] = useState<LocalityItem[]>([])
+  const [localities, setLocalities] = useState<any[]>([
+    { id: '1', name: 'Sector 2', city: 'Bengaluru', isActive: true },
+    { id: '2', name: 'Koramangala', city: 'Bengaluru', isActive: true },
+    { id: '3', name: 'Indiranagar', city: 'Bengaluru', isActive: false },
+  ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newLocality, setNewLocality] = useState({ name: "", city: "Bengaluru" })
-
-  const syncLocalities = () => {
-    setLocalities(AppState.getLocalities())
-  }
-
-  useEffect(() => {
-    syncLocalities()
-    window.addEventListener("hsrpg_state_change", syncLocalities)
-    return () => window.removeEventListener("hsrpg_state_change", syncLocalities)
-  }, [])
 
   const handleAddLocality = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newLocality.name || !newLocality.city) return
 
     setIsSubmitting(true)
-    AppState.addLocality(newLocality.name, newLocality.city)
+    setLocalities(prev => [
+      ...prev,
+      { id: Date.now().toString(), name: newLocality.name, city: newLocality.city, isActive: true }
+    ])
     setNewLocality({ name: "", city: "Bengaluru" })
     setIsSubmitting(false)
   }
 
   const toggleLocalityStatus = (id: string) => {
-    AppState.toggleLocality(id)
+    setLocalities(prev => prev.map(loc => 
+      loc.id === id ? { ...loc, isActive: !loc.isActive } : loc
+    ))
   }
 
   return (

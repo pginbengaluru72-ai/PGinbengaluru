@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ShieldAlert, ShieldCheck, User, Building, MapPin, ExternalLink, CheckCircle2, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
-import { AppState, PropertyItem } from "@/lib/appState"
+import { adminApi } from "@/lib/apiClient"
 import Link from "next/link"
 
 const container: any = {
@@ -23,30 +23,48 @@ const item: any = {
 }
 
 export default function VerificationsPage() {
-  const [properties, setProperties] = useState<PropertyItem[]>([])
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const syncState = () => {
-    setProperties(AppState.getProperties())
+  const fetchVerifications = async () => {
+    setLoading(true)
+    try {
+      const res = await adminApi.getVerifications()
+      setProperties(res?.properties || [])
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
+    fetchVerifications()
   }, [])
 
-  const handleApprove = (id: string) => {
-    AppState.verifyProperty(id, true)
-    syncState()
+  const handleApprove = async (id: string) => {
+    try {
+      await adminApi.verifyProperty(id)
+      fetchVerifications()
+    } catch (e: any) {
+      alert(e.message || "Failed to approve property")
+    }
   }
 
-  const handleReject = (id: string) => {
-    AppState.deleteProperty(id)
-    syncState()
+  const handleReject = async (id: string) => {
+    const reason = prompt("Enter rejection reason (optional):")
+    if (reason === null) return // Cancelled
+    try {
+      await adminApi.rejectProperty(id, reason)
+      fetchVerifications()
+    } catch (e: any) {
+      alert(e.message || "Failed to reject property")
+    }
   }
 
-  const pendingProps = properties.filter(p => !p.isVerified)
-  const verifiedProps = properties.filter(p => p.isVerified)
+  // The endpoint returns only SUBMITTED (pending) properties.
+  // We'll show just the pending ones for now, as that's what the API supports.
+  const pendingProps = properties
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-12">
@@ -66,14 +84,8 @@ export default function VerificationsPage() {
         </Card>
         <Card className="col-span-1 shadow-xl shadow-slate-200/50 dark:shadow-none border-slate-200/50 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl">
           <CardHeader className="pb-2">
-            <CardTitle className="text-4xl font-black text-blue-500">12</CardTitle>
+            <CardTitle className="text-4xl font-black text-blue-500">0</CardTitle>
             <CardDescription className="font-semibold text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">Pending KYC</CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="col-span-1 shadow-xl shadow-slate-200/50 dark:shadow-none border-slate-200/50 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-4xl font-black text-emerald-500">{verifiedProps.length}</CardTitle>
-            <CardDescription className="font-semibold text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">Verified & Active PGs</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -85,7 +97,9 @@ export default function VerificationsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {pendingProps.length === 0 ? (
+          {loading ? (
+            <div className="p-12 text-center text-slate-500 font-medium">Loading properties...</div>
+          ) : pendingProps.length === 0 ? (
             <div className="p-12 text-center text-slate-500 font-medium">
               <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3 opacity-75" />
               <p className="text-lg font-bold text-slate-900 dark:text-slate-100">No Pending Verification Requests</p>
@@ -113,8 +127,7 @@ export default function VerificationsPage() {
                       </h4>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1 font-medium"><MapPin className="h-3.5 w-3.5 text-indigo-500" /> {v.locality}, {v.city}</span>
-                        <span className="flex items-center gap-1 font-medium"><User className="h-3.5 w-3.5 text-indigo-500" /> Owner: {v.ownerName}</span>
-                        <span className="text-xs opacity-75">{v.submittedAt}</span>
+                        <span className="text-xs opacity-75">{new Date(v.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -130,41 +143,13 @@ export default function VerificationsPage() {
                       onClick={() => handleApprove(v.id)}
                       className="w-full sm:w-auto rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/20"
                     >
-                      <ShieldCheck className="mr-1.5 h-4 w-4" /> Approve Listing
+                      <ShieldCheck className="mr-1.5 h-4 w-4" /> Approve
                     </Button>
                   </div>
                 </motion.div>
               ))}
             </motion.div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Verified List */}
-      <Card className="shadow-xl border-slate-200/50 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">Active Verified PGs ({verifiedProps.length})</CardTitle>
-          <CardDescription className="text-xs">Properties currently active and visible to tenants on HSRPG.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            {verifiedProps.map((p) => (
-              <div key={p.id} className="p-4 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    {p.name}
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{p.locality}, {p.city} • {p.type.toUpperCase()}</p>
-                </div>
-                <Link href="/pg/1" target="_blank">
-                  <Button variant="outline" size="sm" className="rounded-lg text-xs font-bold border-slate-200">
-                    <ExternalLink className="w-3.5 h-3.5 mr-1" /> View Listing
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

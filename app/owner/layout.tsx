@@ -1,13 +1,43 @@
 "use client"
 
 import { SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
-import { Home, Building, Users, Bed, CreditCard, Settings, BarChart3, User } from "lucide-react"
+import { Home, Building, Users, Bed, CreditCard, Settings, BarChart3, User, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+import { authApi } from "@/lib/apiClient"
 import PageTransition from "@/components/PageTransition"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [authState, setAuthState] = useState<"loading" | "authorized" | "rejected">("loading")
+
+  useEffect(() => {
+    authApi.getMe()
+      .then((res) => {
+        if (res?.user && res.user.role === 'OWNER') {
+          setAuthState("authorized")
+        } else {
+          // User exists but is not an OWNER — kick them out
+          window.location.replace('/auth')
+        }
+      })
+      .catch(() => {
+        // No session / backend down / any error — kick to login
+        window.location.replace('/auth')
+      })
+  }, [])
+
+  if (authState !== "authorized") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="font-bold text-slate-500 text-sm">Verifying session...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <SidebarProvider>
@@ -78,11 +108,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </PageTransition>
         </main>
 
-        {/* FLOATING BOTTOM NAVIGATION PILL BAR (FROM SCREENSHOTS) */}
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md">
+        {/* FLOATING BOTTOM NAVIGATION PILL BAR */}
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md md:hidden">
           <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-full shadow-2xl p-2 flex items-center justify-around relative">
             
-            {/* Home */}
             <Link 
               href="/owner" 
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
@@ -93,7 +122,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[10px]">Home</span>
             </Link>
 
-            {/* Elevated Center Properties Floating Badge */}
             <Link 
               href="/owner/properties"
               className="relative -top-5 flex flex-col items-center group"
@@ -104,7 +132,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 -mt-0.5">Properties</span>
             </Link>
 
-            {/* Reports */}
             <Link 
               href="/owner/billing" 
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
@@ -115,7 +142,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-[10px]">Reports</span>
             </Link>
 
-            {/* Account */}
             <Link 
               href="/owner/settings" 
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${

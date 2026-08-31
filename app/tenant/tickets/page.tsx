@@ -6,34 +6,31 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Wrench, Plus, CheckCircle2, AlertCircle, Clock, Sparkles } from "lucide-react"
-import { AppState, MaintenanceTicket } from "@/lib/appState"
+import { Wrench, Plus, CheckCircle2, AlertCircle, Clock, Sparkles } from "lucide-react"
 
 export default function TenantTicketsPage() {
-  const [tickets, setTickets] = useState<MaintenanceTicket[]>([])
+  const [tickets, setTickets] = useState<any[]>([])
   const [category, setCategory] = useState("Electrical")
   const [priority, setPriority] = useState<"High" | "Medium" | "Low">("High")
   const [issue, setIssue] = useState("")
   const [submittedNotice, setSubmittedNotice] = useState(false)
 
-  const syncState = () => {
-    setTickets(AppState.getTickets())
-  }
-
-  useEffect(() => {
-    syncState()
-    window.addEventListener("hsrpg_state_change", syncState)
-    return () => window.removeEventListener("hsrpg_state_change", syncState)
-  }, [])
-
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault()
     if (!issue.trim()) return
 
-    AppState.addTicket("Rahul Sharma", "Room 101", category, issue.trim(), priority)
+    const newTicket = {
+      id: `TKT-${Math.floor(Math.random() * 10000)}`,
+      issue: issue.trim(),
+      category,
+      priority,
+      status: "Submitted"
+    }
+
+    setTickets(prev => [newTicket, ...prev])
     setIssue("")
     setSubmittedNotice(true)
     setTimeout(() => setSubmittedNotice(false), 3000)
-    syncState()
   }
 
   return (

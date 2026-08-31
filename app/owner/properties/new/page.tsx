@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Loader2, Plus, Star, Search, Check, Sparkles, MapPin, Building, Shield, Wifi, Car, Utensils, Shirt, Video, Zap, Droplets, Dumbbell } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { AppState, LocalityItem } from "@/lib/appState"
+import { ownerApi } from "@/lib/apiClient"
 
 export default function AddPropertyPage() {
   const router = useRouter()
-  const [localities, setLocalities] = useState<LocalityItem[]>([])
+  const [localities, setLocalities] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [images, setImages] = useState<string[]>([])
   
@@ -49,7 +49,8 @@ export default function AddPropertyPage() {
   })
 
   useEffect(() => {
-    const activeLocs = AppState.getLocalities().filter(l => l.isActive)
+    // Hardcoded localities for now since there's no public localities API yet
+    const activeLocs = [{ id: '1', name: 'Sector 2', city: 'Bengaluru, Karnataka', isActive: true }]
     setLocalities(activeLocs)
     if (activeLocs.length > 0) {
       setFormData(prev => ({ ...prev, locality: activeLocs[0].name }))
@@ -75,7 +76,7 @@ export default function AddPropertyPage() {
     setImages(prev => [...prev, nextPhoto])
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name) {
       alert("Please enter Property Name")
@@ -84,23 +85,27 @@ export default function AddPropertyPage() {
 
     setIsSubmitting(true)
     
-    AppState.addProperty({
-      name: formData.name,
-      type: formData.type,
-      locality: formData.locality,
-      city: `${formData.city}, Karnataka`,
-      address: formData.streetAddress || `${formData.locality}, ${formData.city}`,
-      whatsappNumber: formData.contactPhone,
-      totalRooms: parseInt(formData.totalRooms) || 10,
-      availableBeds: parseInt(formData.totalRooms) || 6,
-      ownerName: "Ramesh Reddy",
-      media: images.length > 0 ? images.map(url => ({ url })) : [{ url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop" }]
-    })
+    try {
+      const res = await ownerApi.createProperty({
+        name: formData.name,
+        type: formData.type.toUpperCase(), // BOYS, GIRLS, COLIVING (colive->COLIVING mapped below)
+        locality: formData.locality,
+        city: formData.city,
+        address: formData.streetAddress || `${formData.locality}, ${formData.city}`,
+        whatsappNumber: formData.contactPhone,
+        startingPrice: parseInt(formData.startingPrice) || 0,
+      })
 
-    setTimeout(() => {
-      setIsSubmitting(false)
+      // Ideally we would also upload images here using ownerApi.uploadMedia and ownerApi.submitProperty
+      if (res?.property) {
+        await ownerApi.submitProperty(res.property.id)
+      }
+
       router.push("/owner/properties")
-    }, 600)
+    } catch (e: any) {
+      alert(e.message || "Failed to create property")
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -205,9 +210,9 @@ export default function AddPropertyPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleInputChange("type", "colive")}
+                  onClick={() => handleInputChange("type", "COLIVING")}
                   className={`h-12 rounded-2xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                    formData.type === 'colive' 
+                    formData.type === 'colive' || formData.type === 'COLIVING'
                       ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/20' 
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
                   }`}
