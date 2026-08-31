@@ -8,10 +8,13 @@ import { MapPin, ShieldCheck, Wifi, Snowflake, Coffee, Tv, MessageCircle, Chevro
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Turnstile } from "@marsidev/react-turnstile"
-import { customerApi } from "@/lib/apiClient"
+import { customerApi, authApi } from "@/lib/apiClient"
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function PropertyDetailClient({ id }: { id: string }) {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -22,6 +25,10 @@ export default function PropertyDetailClient({ id }: { id: string }) {
   const [message, setMessage] = useState("")
 
   useEffect(() => {
+    authApi.getMe()
+      .then(res => setUser(res?.user))
+      .catch(() => {}) // Ignore auth errors on public page
+
     customerApi.getPropertyDetail(id)
       .then(res => setProperty(res?.property))
       .catch(console.error)
@@ -30,6 +37,14 @@ export default function PropertyDetailClient({ id }: { id: string }) {
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!user || user.role !== 'CUSTOMER') {
+      alert("Please log in as a Tenant/Customer to contact the owner.")
+      // Ideally redirect to login
+      router.push("/login?role=tenant")
+      return
+    }
+
     if (!turnstileToken) {
       alert("Please complete the security check.")
       return
@@ -118,22 +133,37 @@ export default function PropertyDetailClient({ id }: { id: string }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
             <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Premium Amenities</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
-                <div className="bg-white p-2 rounded-xl shadow-sm"><Wifi className="h-5 w-5 text-indigo-600" /></div>
-                <span className="text-sm font-bold text-slate-700">High-Speed WiFi</span>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                <div className="bg-white p-2 rounded-xl shadow-sm"><Snowflake className="h-5 w-5 text-blue-600" /></div>
-                <span className="text-sm font-bold text-slate-700">AC Rooms</span>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-amber-50/50 rounded-2xl border border-amber-100/50">
-                <div className="bg-white p-2 rounded-xl shadow-sm"><Coffee className="h-5 w-5 text-amber-600" /></div>
-                <span className="text-sm font-bold text-slate-700">3 Meals/Day</span>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50">
-                <div className="bg-white p-2 rounded-xl shadow-sm"><Tv className="h-5 w-5 text-rose-600" /></div>
-                <span className="text-sm font-bold text-slate-700">Common TV</span>
-              </div>
+              {(() => {
+                let am = {} as Record<string, boolean>;
+                try {
+                  am = property.amenities ? JSON.parse(property.amenities) : {};
+                } catch(e) {}
+                
+                const facilityMap = [
+                  { key: 'wifi', label: 'High-Speed WiFi', icon: <Wifi className="h-5 w-5 text-indigo-600" />, bg: 'bg-indigo-50/50', border: 'border-indigo-100/50' },
+                  { key: 'food', label: 'Food Included', icon: <Coffee className="h-5 w-5 text-amber-600" />, bg: 'bg-amber-50/50', border: 'border-amber-100/50' },
+                  { key: 'cctv', label: 'CCTV Security', icon: <ShieldCheck className="h-5 w-5 text-red-600" />, bg: 'bg-red-50/50', border: 'border-red-100/50' },
+                  { key: 'laundry', label: 'Laundry', icon: <Shirt className="h-5 w-5 text-blue-600" />, bg: 'bg-blue-50/50', border: 'border-blue-100/50' },
+                  { key: 'cleaning', label: 'Daily Cleaning', icon: <Sparkles className="h-5 w-5 text-emerald-600" />, bg: 'bg-emerald-50/50', border: 'border-emerald-100/50' },
+                  { key: 'parking', label: 'Parking', icon: <Car className="h-5 w-5 text-slate-600" />, bg: 'bg-slate-50/50', border: 'border-slate-100/50' },
+                  { key: 'powerBackup', label: 'Power Backup', icon: <Zap className="h-5 w-5 text-yellow-600" />, bg: 'bg-yellow-50/50', border: 'border-yellow-100/50' },
+                  { key: 'waterSupply', label: '24/7 Water', icon: <Droplets className="h-5 w-5 text-cyan-600" />, bg: 'bg-cyan-50/50', border: 'border-cyan-100/50' },
+                  { key: 'gym', label: 'Gym', icon: <Dumbbell className="h-5 w-5 text-rose-600" />, bg: 'bg-rose-50/50', border: 'border-rose-100/50' },
+                ];
+
+                const activeFacilities = facilityMap.filter(f => am[f.key]);
+
+                if (activeFacilities.length === 0) {
+                  return <div className="text-slate-500 font-medium col-span-full">No amenities listed.</div>;
+                }
+
+                return activeFacilities.map((f, i) => (
+                  <div key={i} className={`flex items-center gap-3 p-4 ${f.bg} rounded-2xl border ${f.border}`}>
+                    <div className="bg-white p-2 rounded-xl shadow-sm">{f.icon}</div>
+                    <span className="text-sm font-bold text-slate-700">{f.label}</span>
+                  </div>
+                ))
+              })()}
             </div>
           </motion.div>
 

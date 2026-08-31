@@ -85,7 +85,7 @@ ownerRouter.post('/properties', async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) return apiError(c, 400, 'INVALID_BODY', 'Invalid request body.');
 
-  const { name, type, address, locality, city, description, whatsappNumber } = body;
+  const { name, type, address, locality, city, description, whatsappNumber, pincode, startingPrice, amenities, listPublicly } = body;
 
   if (!name || !type || !address || !locality) {
     return apiError(c, 400, 'MISSING_FIELDS', 'Name, type, address, and locality are required.');
@@ -102,6 +102,8 @@ ownerRouter.post('/properties', async (c) => {
   const random = Math.random().toString(36).substring(2, 6);
   const publicId = `STY-PG-${timestamp}${random}`.toUpperCase();
 
+  const finalStatus = listPublicly === true ? 'SUBMITTED' : 'DRAFT';
+
   await db.insert(schema.properties).values({
     id: propertyId,
     publicId,
@@ -109,11 +111,14 @@ ownerRouter.post('/properties', async (c) => {
     name: name.trim(),
     description: description?.trim() || null,
     type,
-    status: 'DRAFT',
+    status: finalStatus,
     address: address.trim(),
     locality: locality.trim(),
     city: city?.trim() || 'Bengaluru',
+    pincode: pincode?.trim() || null,
     whatsappNumber: whatsappNumber || null,
+    startingPrice: startingPrice ? Number(startingPrice) : 0,
+    amenities: amenities ? JSON.stringify(amenities) : null,
     createdAt: now,
     updatedAt: now,
   });
@@ -213,6 +218,14 @@ ownerRouter.post('/properties/:id/rooms', async (c) => {
   const { roomNumber, sharingType, hasAc, hasAttachedBathroom } = body;
   if (!roomNumber || !sharingType) return apiError(c, 400, 'MISSING_FIELDS', 'Room number and sharing type are required.');
 
+  // Safely parse sharingType from strings like "2 Sharing" to integer
+  let parsedSharing = 1;
+  if (typeof sharingType === 'string') {
+    parsedSharing = parseInt(sharingType.replace(/\D/g, '')) || 1;
+  } else if (typeof sharingType === 'number') {
+    parsedSharing = sharingType;
+  }
+
   const db = drizzle(c.env.DB, { schema });
   const now = new Date();
   const roomId = crypto.randomUUID();
@@ -221,7 +234,7 @@ ownerRouter.post('/properties/:id/rooms', async (c) => {
     id: roomId,
     propertyId,
     roomNumber,
-    sharingType,
+    sharingType: parsedSharing,
     hasAc: hasAc || false,
     hasAttachedBathroom: hasAttachedBathroom || false,
     createdAt: now,

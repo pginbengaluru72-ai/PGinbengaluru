@@ -86,14 +86,18 @@ export default function AddPropertyPage() {
     setIsSubmitting(true)
     
     try {
+      const propertyType = formData.type.toUpperCase() === 'COLIVE' ? 'COLIVING' : formData.type.toUpperCase();
       const res = await ownerApi.createProperty({
         name: formData.name,
-        type: formData.type.toUpperCase(), // BOYS, GIRLS, COLIVING (colive->COLIVING mapped below)
+        type: propertyType,
         locality: formData.locality,
         city: formData.city,
         address: formData.streetAddress || `${formData.locality}, ${formData.city}`,
         whatsappNumber: formData.contactPhone,
         startingPrice: parseInt(formData.startingPrice) || 0,
+        pincode: formData.pincode,
+        amenities: facilities,
+        listPublicly: formData.listPublicly
       })
 
       // Ideally we would also upload images here using ownerApi.uploadMedia and ownerApi.submitProperty

@@ -66,6 +66,9 @@ superadminRouter.get('/verifications', async (c) => {
     status: schema.properties.status,
     locality: schema.properties.locality,
     city: schema.properties.city,
+    pincode: schema.properties.pincode,
+    startingPrice: schema.properties.startingPrice,
+    amenities: schema.properties.amenities,
     ownerId: schema.properties.ownerId,
     createdAt: schema.properties.createdAt,
   }).from(schema.properties)
