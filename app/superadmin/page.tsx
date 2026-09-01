@@ -6,6 +6,18 @@ import { Button } from "@/components/ui/button"
 import { ShieldCheck, IndianRupee, Users, Building2, MapPin, CheckCircle2, Clock } from "lucide-react"
 import { adminApi } from "@/lib/apiClient"
 import Link from "next/link"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { motion } from "framer-motion"
+
+const data = [
+  { name: 'Jan', revenue: 4000, users: 240 },
+  { name: 'Feb', revenue: 5500, users: 310 },
+  { name: 'Mar', revenue: 8000, users: 450 },
+  { name: 'Apr', revenue: 11000, users: 590 },
+  { name: 'May', revenue: 16000, users: 780 },
+  { name: 'Jun', revenue: 24000, users: 1120 },
+  { name: 'Jul', revenue: 42500, users: 1540 },
+]
 
 export default function SuperAdminDashboardOverview() {
   const [stats, setStats] = useState({ 
@@ -92,6 +104,36 @@ export default function SuperAdminDashboardOverview() {
           </CardContent>
         </Card>
       </div>
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <Card className="border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mb-6 shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+            <CardTitle className="text-lg font-bold">Platform Growth Analytics</CardTitle>
+            <CardDescription className="text-xs">Monthly Recurring Revenue (MRR) vs Active Users</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="h-[300px] w-full pt-6 pr-6 pb-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="grid gap-6 md:grid-cols-7">
         <Card className="col-span-4 border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">

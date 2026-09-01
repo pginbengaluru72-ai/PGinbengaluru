@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Building, MapPin, CheckCircle, Clock, Bell, Wrench, CreditCard, MessageSquare, Heart } from "lucide-react"
-import { customerApi } from "@/lib/apiClient"
+import { Building, MapPin, CheckCircle, Clock, Bell, Wrench, CreditCard, MessageSquare, Heart, Flame, CalendarDays } from "lucide-react"
+import { customerApi, authApi } from "@/lib/apiClient"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -12,19 +12,22 @@ export default function TenantDashboardOverview() {
   const [applications, setApplications] = useState<any[]>([])
   const [tickets, setTickets] = useState<any[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
+  const [broadcast, setBroadcast] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   const syncState = async () => {
     try {
-      const [appsRes, ticketsRes, favsRes] = await Promise.all([
+      const [appsRes, ticketsRes, favsRes, broadcastRes] = await Promise.all([
         customerApi.getMyApplications().catch(() => null),
         customerApi.getTickets().catch(() => null),
-        customerApi.getMyFavorites().catch(() => null)
+        customerApi.getMyFavorites().catch(() => null),
+        authApi.getBroadcast().catch(() => null)
       ])
       
       if (appsRes?.applications) setApplications(appsRes.applications)
       if (ticketsRes?.tickets) setTickets(ticketsRes.tickets)
       if (favsRes?.favorites) setFavorites(favsRes.favorites)
+      if (broadcastRes?.broadcast) setBroadcast(broadcastRes.broadcast)
     } catch (e) {
       console.error(e)
     } finally {
@@ -48,15 +51,17 @@ export default function TenantDashboardOverview() {
       </div>
 
       {/* Super Admin Broadcast Banner */}
-      <motion.div whileHover={{ scale: 1.01 }} className="p-4 bg-indigo-50 border border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800 rounded-2xl flex items-start gap-3 shadow-sm transition-all">
-        <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0 animate-bounce" />
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">HSRPG Platform Notice</span>
+      {broadcast && (broadcast.target === 'all' || broadcast.target === 'tenants') && (
+        <motion.div whileHover={{ scale: 1.01 }} className={`p-4 border rounded-2xl flex items-start gap-3 shadow-sm transition-all ${broadcast.level === 'warning' ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800' : 'bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800'}`}>
+          <Bell className={`w-5 h-5 mt-0.5 shrink-0 animate-bounce ${broadcast.level === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'}`} />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold uppercase tracking-wider ${broadcast.level === 'warning' ? 'text-amber-700 dark:text-amber-300' : 'text-indigo-700 dark:text-indigo-300'}`}>HSRPG Platform Notice</span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{broadcast.message}</p>
           </div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Welcome to your Tenant Portal. You can now manage maintenance tickets directly from the dashboard.</p>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Active Stay Card */}
       {activeStay ? (
@@ -107,6 +112,24 @@ export default function TenantDashboardOverview() {
             </CardContent>
           </Card>
         </Link>
+
+        {/* Gamified Rent Streak Card */}
+        <Card className="border-orange-200 dark:border-orange-900 shadow-sm bg-gradient-to-br from-white to-orange-50/50 dark:from-slate-900 dark:to-orange-950/30 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Rent Streak</CardTitle>
+            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/40 rounded-md"><Flame className="h-4 w-4 text-orange-600 dark:text-orange-400 animate-pulse" /></div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2">
+              <div className="text-3xl font-black text-slate-900 dark:text-slate-100">8</div>
+              <div className="text-sm font-bold text-orange-600 dark:text-orange-400 mb-1">Months</div>
+            </div>
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full mt-3 overflow-hidden">
+              <motion.div initial={{ width: 0 }} animate={{ width: '80%' }} className="h-full bg-orange-500 rounded-full" transition={{ duration: 1, delay: 0.2 }} />
+            </div>
+            <p className="text-[10px] text-slate-500 font-medium mt-2">2 months until Gold Tier</p>
+          </CardContent>
+        </Card>
 
         <Card className="border-slate-200 dark:border-slate-800 shadow-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

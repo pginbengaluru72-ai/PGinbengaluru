@@ -6,10 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Building, Users, Bed, LayoutGrid, Bell, TrendingUp, ShieldAlert, Sparkles, ChevronRight, Trophy, PieChart, Plus, Wrench, CheckCircle2, ArrowDownRight, ArrowUpRight } from "lucide-react"
 import { ownerApi, authApi } from "@/lib/apiClient"
 import Link from "next/link"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { motion } from "framer-motion"
+
+const financialData = [
+  { month: 'Apr', income: 45000, expenses: 12000 },
+  { month: 'May', income: 52000, expenses: 14000 },
+  { month: 'Jun', income: 58000, expenses: 18000 },
+  { month: 'Jul', income: 65000, expenses: 22500 },
+]
 
 export default function DashboardOverview() {
   const [stats, setStats] = useState({ totalProperties: 0, totalBeds: 0, availableBeds: 0, occupiedBeds: 0, occupancyRate: 0 })
-  const [applications, setApplications] = useState<any[]>([])
+  const [tickets, setTickets] = useState<any[]>([])
+  const [broadcast, setBroadcast] = useState<any>(null)
   const [userName, setUserName] = useState("Owner")
 
   const syncState = async () => {
@@ -20,8 +30,11 @@ export default function DashboardOverview() {
       const dbStats = await ownerApi.getDashboardStats()
       if (dbStats) setStats(dbStats)
 
-      const appsRes = await ownerApi.getApplications()
-      if (appsRes?.applications) setApplications(appsRes.applications)
+      const ticketsRes = await ownerApi.getTickets().catch(() => null)
+      if (ticketsRes?.tickets) setTickets(ticketsRes.tickets)
+
+      const broadcastRes = await authApi.getBroadcast().catch(() => null)
+      if (broadcastRes?.broadcast) setBroadcast(broadcastRes.broadcast)
     } catch (e) {
       console.error(e)
     }
@@ -91,14 +104,16 @@ export default function DashboardOverview() {
 
       <div className="max-w-4xl mx-auto px-4 space-y-5">
         
-        {/* SYSTEM ANNOUNCEMENT (Mocked for now) */}
-        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3 shadow-sm">
-          <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">System Announcement</span>
-            <p className="text-xs font-bold text-slate-900 dark:text-white">Welcome to the new StaySure Owner Platform.</p>
+        {/* SYSTEM ANNOUNCEMENT */}
+        {broadcast && (broadcast.target === 'all' || broadcast.target === 'owners') && (
+          <div className={`p-4 border rounded-2xl flex items-start gap-3 shadow-sm ${broadcast.level === 'warning' ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:border-amber-900' : 'bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-900'}`}>
+            <Bell className={`w-5 h-5 mt-0.5 shrink-0 ${broadcast.level === 'warning' ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'}`} />
+            <div className="space-y-0.5">
+              <span className={`text-[10px] font-black uppercase tracking-wider ${broadcast.level === 'warning' ? 'text-amber-700 dark:text-amber-300' : 'text-indigo-700 dark:text-indigo-300'}`}>System Announcement</span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">{broadcast.message}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* FINANCIAL OVERVIEW CARD */}
         <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -137,6 +152,23 @@ export default function DashboardOverview() {
                 </span>
                 <p className="text-lg font-black text-red-600 dark:text-red-400 mt-1">₹22,500</p>
               </div>
+            </div>
+
+            {/* Financial Chart */}
+            <div className="h-[180px] w-full pt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={financialData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="month" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value/1000}k`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                    itemStyle={{ color: '#fff' }}
+                    cursor={{ fill: 'rgba(226, 232, 240, 0.1)' }}
+                  />
+                  <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
             {/* Pending Deposits Button Pill */}
@@ -218,21 +250,21 @@ export default function DashboardOverview() {
         <Card className="bg-white dark:bg-slate-900 rounded-3xl border-slate-200/80 dark:border-slate-800 shadow-sm p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-indigo-500" /> Pending Applications
+              <Wrench className="w-5 h-5 text-amber-500" /> Tenant Maintenance Tickets
             </h2>
-            <span className="text-xs font-bold text-slate-500">{applications.length} Active</span>
+            <span className="text-xs font-bold text-slate-500">{tickets.length} Open</span>
           </div>
 
           <div className="space-y-2">
-            {applications.length === 0 && <p className="text-xs text-slate-500">No pending applications.</p>}
-            {applications.map((app) => (
-              <div key={app.id} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            {tickets.length === 0 && <p className="text-xs text-slate-500">No active maintenance tickets.</p>}
+            {tickets.slice(0, 5).map((ticket) => (
+              <div key={ticket.id} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">{app.customerName}</p>
-                  <p className="text-[11px] text-slate-500">{app.propertyName}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{ticket.subject}</p>
+                  <p className="text-[11px] text-slate-500">{ticket.propertyName} • By {ticket.reporterName}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800`}>
-                  {app.status}
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ticket.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                  {ticket.status}
                 </span>
               </div>
             ))}

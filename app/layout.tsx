@@ -10,6 +10,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "HSRPG - Hyper-Local PG Platform",
   description: "The premium zero-brokerage PG platform.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "HSRPG",
+  },
+  themeColor: "#4f46e5",
+  viewport: "minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover",
 };
 
 export default function RootLayout({

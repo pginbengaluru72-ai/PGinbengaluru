@@ -5,33 +5,41 @@ import { Button } from "@/components/ui/button"
 import { Activity, Send, AlertTriangle, Info, BellRing, Building, Users, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
+import { adminApi, authApi } from "@/lib/apiClient"
 
 export default function BroadcastPage() {
-  const [broadcasts, setBroadcasts] = useState<any[]>([
-    { id: '1', level: 'warning', target: 'all', message: 'Platform maintenance scheduled for tonight at 2 AM.', createdAt: 'Just now' },
-    { id: '2', level: 'info', target: 'owners', message: 'New property verification process is now live.', createdAt: 'Yesterday' }
-  ])
+  const [broadcasts, setBroadcasts] = useState<any[]>([])
   const [selectedAudience, setSelectedAudience] = useState<"all" | "owners" | "tenants">("all")
   const [level, setLevel] = useState<"info" | "warning">("info")
   const [message, setMessage] = useState("")
   const [sentNotice, setSentNotice] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSendBroadcast = (e: React.FormEvent) => {
+  useEffect(() => {
+    authApi.getBroadcast().then(res => {
+      if (res?.broadcast) setBroadcasts([res.broadcast])
+    }).catch(console.error)
+  }, [])
+
+  const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!message.trim()) return
 
-    const newBroadcast = {
-      id: Date.now().toString(),
-      level,
-      target: selectedAudience,
-      message: message.trim(),
-      createdAt: 'Just now'
+    setIsSubmitting(true)
+    try {
+      const data = { message: message.trim(), level, target: selectedAudience }
+      await adminApi.sendBroadcast(data)
+      
+      const newBroadcast = { ...data, id: Date.now().toString(), createdAt: new Date().toISOString() }
+      setBroadcasts(prev => [newBroadcast, ...prev])
+      setMessage("")
+      setSentNotice(true)
+      setTimeout(() => setSentNotice(false), 3000)
+    } catch (e: any) {
+      alert(e.message || 'Failed to send broadcast.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setBroadcasts(prev => [newBroadcast, ...prev])
-    setMessage("")
-    setSentNotice(true)
-    setTimeout(() => setSentNotice(false), 3000)
   }
 
   return (
@@ -126,8 +134,8 @@ export default function BroadcastPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full h-12 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20">
-                  <BellRing className="mr-2 h-5 w-5" /> Push Broadcast Now
+                <Button disabled={isSubmitting} type="submit" className="w-full h-12 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20">
+                  <BellRing className="mr-2 h-5 w-5" /> {isSubmitting ? 'Pushing...' : 'Push Broadcast Now'}
                 </Button>
               </form>
             </CardContent>

@@ -6,6 +6,9 @@ import authRouter from './routes/auth';
 import ownerRouter from './routes/owner';
 import superadminRouter from './routes/superadmin';
 import tenantRouter from './routes/tenant';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import * as schema from './db/schema';
 
 type Bindings = {
   DB: D1Database;
@@ -67,6 +70,19 @@ app.route('/api/admin', superadminRouter);
 
 // Customer/Tenant APIs
 app.route('/api/customer', tenantRouter);
+
+// Public Broadcast API
+app.get('/api/broadcast', async (c) => {
+  const db = drizzle(c.env.DB, { schema });
+  const [setting] = await db.select().from(schema.platformSettings).where(eq(schema.platformSettings.key, 'global_broadcast')).limit(1);
+  if (!setting || !setting.value) return c.json({ success: true, broadcast: null });
+  try {
+    const broadcast = JSON.parse(setting.value);
+    return c.json({ success: true, broadcast });
+  } catch (e) {
+    return c.json({ success: true, broadcast: null });
+  }
+});
 
 // ============================================================
 // GLOBAL ERROR HANDLER

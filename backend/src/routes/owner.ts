@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import * as schema from '../db/schema';
+import { hashPassword } from '../lib/crypto';
 import { requireAuth, requireRole, verifyPropertyOwnership, apiError, apiSuccess, type AuthUser } from '../lib/middleware';
 
 type Bindings = { DB: D1Database; BUCKET: R2Bucket };
@@ -75,6 +76,33 @@ ownerRouter.get('/properties', async (c) => {
     .orderBy(desc(schema.properties.createdAt));
 
   return apiSuccess(c, { properties });
+});
+
+// ============================================================
+// GET /api/owner/complaints — List tickets for owner's properties
+// ============================================================
+ownerRouter.get('/complaints', async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const tickets = await db
+    .select({
+      id: schema.complaints.id,
+      publicId: schema.complaints.publicId,
+      subject: schema.complaints.subject,
+      description: schema.complaints.description,
+      status: schema.complaints.status,
+      createdAt: schema.complaints.createdAt,
+      propertyName: schema.properties.name,
+      reporterName: schema.users.name,
+    })
+    .from(schema.complaints)
+    .innerJoin(schema.properties, eq(schema.complaints.propertyId, schema.properties.id))
+    .innerJoin(schema.users, eq(schema.complaints.reporterId, schema.users.id))
+    .where(eq(schema.properties.ownerId, user.id))
+    .orderBy(desc(schema.complaints.createdAt));
+
+  return apiSuccess(c, { tickets });
 });
 
 // ============================================================
@@ -404,6 +432,108 @@ ownerRouter.post('/upload', async (c) => {
   });
 
   return apiSuccess(c, { url, key }, 201);
+});
+
+// ============================================================
+// GET /api/owner/tenants — List tenants across owner's properties
+// ============================================================
+ownerRouter.get('/tenants', async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  // Get tenants based on assigned beds
+  const tenants = await db
+    .select({
+      userId: schema.users.id,
+      name: schema.users.name,
+      email: schema.users.email,
+      phone: schema.users.phone,
+      propertyName: schema.properties.name,
+      roomNumber: schema.rooms.roomNumber,
+      bedIdentifier: schema.beds.identifier,
+    })
+    .from(schema.users)
+    .innerJoin(schema.beds, eq(schema.users.id, schema.beds.tenantId))
+    .innerJoin(schema.rooms, eq(schema.beds.roomId, schema.rooms.id))
+    .innerJoin(schema.properties, eq(schema.rooms.propertyId, schema.properties.id))
+    .where(eq(schema.properties.ownerId, user.id))
+    .orderBy(desc(schema.users.createdAt));
+
+  return apiSuccess(c, { tenants });
+});
+
+// ============================================================
+// POST /api/owner/tenants/create — Generate a tenant password & account
+// ============================================================
+ownerRouter.post('/tenants/create', async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json().catch(() => null);
+  if (!body) return apiError(c, 400, 'INVALID_BODY', 'Invalid request body.');
+
+  const { name, email, phone, propertyId } = body;
+
+  if (!email || !name || !propertyId) {
+    return apiError(c, 400, 'MISSING_FIELDS', 'Name, email, and propertyId are required.');
+  }
+
+  const db = drizzle(c.env.DB, { schema });
+
+  // Verify ownership of the target property
+  const [property] = await db.select().from(schema.properties)
+    .where(and(eq(schema.properties.id, propertyId), eq(schema.properties.ownerId, user.id)))
+    .limit(1);
+
+  if (!property) {
+    return apiError(c, 403, 'FORBIDDEN', 'You do not own this property or it does not exist.');
+  }
+
+  // Check if tenant already exists
+  const [existingUser] = await db.select().from(schema.users).where(eq(schema.users.email, email.toLowerCase())).limit(1);
+  if (existingUser) {
+    return apiError(c, 400, 'USER_EXISTS', 'A user with this email already exists.');
+  }
+
+  // Generate random password
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const rawPassword = `${name.split(' ')[0].toUpperCase()}@${randomSuffix}`;
+  const passwordHash = await hashPassword(rawPassword);
+
+  const newUserId = crypto.randomUUID();
+  const timestamp = Date.now().toString(36);
+  const publicId = `STY-CUS-${timestamp}${randomSuffix}`.toUpperCase();
+  const now = new Date();
+
+  // Create User
+  await db.insert(schema.users).values({
+    id: newUserId,
+    publicId,
+    email: email.toLowerCase(),
+    name,
+    phone: phone || null,
+    passwordHash,
+    role: 'CUSTOMER',
+    mustChangePassword: true, // Force change on first login
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // Create Profile
+  await db.insert(schema.customerProfiles).values({
+    id: crypto.randomUUID(),
+    userId: newUserId,
+    publicId: publicId,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // (Optional) We could auto-assign them to a bed here if we passed a bedId, 
+  // but for now, we just create the account and return the password.
+
+  return apiSuccess(c, {
+    tenant: { id: newUserId, name, email },
+    generatedPassword: rawPassword,
+    message: 'Tenant account created successfully.'
+  }, 201);
 });
 
 export default ownerRouter;

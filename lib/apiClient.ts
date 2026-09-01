@@ -52,6 +52,7 @@ export const authApi = {
   getMe: () => fetchApi<any>('/api/auth/me', { method: 'GET' }),
   updateProfile: (data: any) => fetchApi<any>('/api/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
   changePassword: (data: any) => fetchApi<any>('/api/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
+  getBroadcast: () => fetchApi<any>('/api/broadcast', { method: 'GET' }),
 };
 
 // ------------------------------------------------------------
@@ -77,7 +78,10 @@ export const ownerApi = {
     formData.append('file', file);
     formData.append('propertyId', propertyId);
     return fetchApi<any>('/api/owner/upload', { method: 'POST', body: formData });
-  }
+  },
+  getTickets: () => fetchApi<any>('/api/owner/complaints', { method: 'GET' }),
+  getTenants: () => fetchApi<any>('/api/owner/tenants', { method: 'GET' }),
+  createTenant: (data: any) => fetchApi<any>('/api/owner/tenants/create', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // ------------------------------------------------------------
@@ -91,6 +95,7 @@ export const adminApi = {
   rejectProperty: (id: string, reason: string) => fetchApi<any>(`/api/admin/verifications/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
   createOwner: (data: any) => fetchApi<any>('/api/admin/owners/create', { method: 'POST', body: JSON.stringify(data) }),
   getAuditLogs: (page = 1) => fetchApi<any>(`/api/admin/audit-logs?page=${page}`, { method: 'GET' }),
+  sendBroadcast: (data: any) => fetchApi<any>('/api/admin/broadcast', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // ------------------------------------------------------------

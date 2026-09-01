@@ -224,4 +224,39 @@ superadminRouter.get('/audit-logs', async (c) => {
   });
 });
 
+// ============================================================
+// POST /api/admin/broadcast — Push global notice
+// ============================================================
+superadminRouter.post('/broadcast', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body?.message) return apiError(c, 400, 'MISSING_FIELDS', 'Message is required.');
+
+  const db = drizzle(c.env.DB, { schema });
+  const user = c.get('user');
+  const now = new Date();
+
+  const broadcastData = JSON.stringify({
+    message: body.message,
+    level: body.level || 'info',
+    target: body.target || 'all',
+    createdAt: now.toISOString()
+  });
+
+  await db.insert(schema.platformSettings).values({
+    key: 'global_broadcast',
+    value: broadcastData,
+    updatedBy: user.id,
+    updatedAt: now,
+  }).onConflictDoUpdate({
+    target: schema.platformSettings.key,
+    set: {
+      value: broadcastData,
+      updatedBy: user.id,
+      updatedAt: now,
+    }
+  });
+
+  return apiSuccess(c, { message: 'Broadcast pushed successfully.' }, 201);
+});
+
 export default superadminRouter;
