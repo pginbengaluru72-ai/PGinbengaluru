@@ -45,7 +45,7 @@ export default function TenantDashboardLayout({ children }: { children: React.Re
             <SidebarContent>
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xl font-extrabold text-white px-4 py-8 tracking-tight">
-                  HSRPG <span className="text-indigo-400">Tenant</span>
+                  StaySure <span className="text-indigo-400">Tenant</span>
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-2 px-2">
@@ -102,6 +102,54 @@ export default function TenantDashboardLayout({ children }: { children: React.Re
             </PageTransition>
           </div>
         </main>
+
+        {/* FLOATING BOTTOM NAVIGATION PILL BAR */}
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md md:hidden">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-full shadow-2xl p-2 flex items-center justify-around relative">
+            
+            <Link 
+              href="/tenant" 
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
+                pathname === '/tenant' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span className="text-[10px]">Home</span>
+            </Link>
+
+            <Link 
+              href="/search" 
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
+                pathname.includes('/search') ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Building className="w-5 h-5" />
+              <span className="text-[10px]">Find PG</span>
+            </Link>
+
+            <Link 
+              href="/tenant/tickets" 
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
+                pathname === '/tenant/tickets' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Wrench className="w-5 h-5" />
+              <span className="text-[10px]">Support</span>
+            </Link>
+
+            <Link 
+              href="/tenant/settings" 
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-full transition-all ${
+                pathname === '/tenant/settings' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="text-[10px]">Profile</span>
+            </Link>
+
+          </div>
+        </div>
+
       </div>
     </SidebarProvider>
   )

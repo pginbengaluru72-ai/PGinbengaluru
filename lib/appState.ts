@@ -137,16 +137,16 @@ const INITIAL_TICKETS: MaintenanceTicket[] = [
 ]
 
 // API Base URL for Worker D1 Backend
-const API_BASE = "https://hsrpg-api.pginbengaluru72.workers.dev/api"
+const API_BASE = "https://staysure-api.pginbengaluru72.workers.dev/api"
 
 // Helper for Robust LocalStorage & SSR Persistence
 function getStored<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback
   try {
-    const raw = localStorage.getItem(`hsrpg_v2_${key}`)
+    const raw = localStorage.getItem(`staysure_v2_${key}`)
     if (!raw) {
       // Seed fallback into localStorage on first load so user additions never get reset
-      localStorage.setItem(`hsrpg_v2_${key}`, JSON.stringify(fallback))
+      localStorage.setItem(`staysure_v2_${key}`, JSON.stringify(fallback))
       return fallback
     }
     return JSON.parse(raw)
@@ -158,8 +158,8 @@ function getStored<T>(key: string, fallback: T): T {
 function setStored<T>(key: string, value: T): void {
   if (typeof window === "undefined") return
   try {
-    localStorage.setItem(`hsrpg_v2_${key}`, JSON.stringify(value))
-    window.dispatchEvent(new Event("hsrpg_state_change"))
+    localStorage.setItem(`staysure_v2_${key}`, JSON.stringify(value))
+    window.dispatchEvent(new Event("staysure_state_change"))
   } catch (e) {
     console.error("Failed to write state to localStorage", e)
   }

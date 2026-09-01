@@ -291,4 +291,30 @@ customerRouter.post('/complaints', requireAuth(), requireRole('CUSTOMER'), async
   return apiSuccess(c, { message: 'Ticket raised successfully.' }, 201);
 });
 
+// ============================================================
+// PROTECTED: GET /api/customer/bills — My Invoices
+// ============================================================
+customerRouter.get('/bills', requireAuth(), requireRole('CUSTOMER'), async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const rows = await db.select({
+    id: schema.bills.id,
+    publicId: schema.bills.publicId,
+    amount: schema.bills.amount,
+    description: schema.bills.description,
+    status: schema.bills.status,
+    dueDate: schema.bills.dueDate,
+    createdAt: schema.bills.createdAt,
+    propertyName: schema.properties.name,
+    ownerPhone: schema.users.phone, // so tenant can call owner
+  }).from(schema.bills)
+    .innerJoin(schema.properties, eq(schema.bills.propertyId, schema.properties.id))
+    .innerJoin(schema.users, eq(schema.bills.ownerId, schema.users.id))
+    .where(eq(schema.bills.tenantId, user.id))
+    .orderBy(desc(schema.bills.createdAt));
+
+  return apiSuccess(c, { bills: rows });
+});
+
 export default customerRouter;

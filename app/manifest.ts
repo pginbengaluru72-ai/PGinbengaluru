@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
  
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'HSRPG - Hyper-Local PG Platform',
-    short_name: 'HSRPG',
+    name: 'StaySure - Hyper-Local PG Platform',
+    short_name: 'StaySure',
     description: 'The premium zero-brokerage PG platform for Tenants and Owners.',
     start_url: '/',
     display: 'standalone',

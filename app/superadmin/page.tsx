@@ -56,7 +56,7 @@ export default function SuperAdminDashboardOverview() {
     <div className="space-y-6 pb-12">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Platform Overview</h2>
-        <p className="text-muted-foreground text-sm">Global metrics and real-time operational controls across HSRPG.</p>
+        <p className="text-muted-foreground text-sm">Global metrics and real-time operational controls across StaySure.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -8,6 +8,13 @@
       "when": 1788111850453,
       "tag": "0000_flawless_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788111950000,
+      "tag": "0001_add_bills",
+      "breakpoints": true
     }
   ]
 }

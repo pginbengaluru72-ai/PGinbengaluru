@@ -493,3 +493,22 @@ export const favorites = sqliteTable('favorites', {
 }, (table) => [
   uniqueIndex('idx_favorites_unique').on(table.customerId, table.propertyId),
 ]);
+
+// ============================================================
+// BILLING SYSTEM (Invoices)
+// ============================================================
+
+export const bills = sqliteTable('bills', {
+  id: text('id').primaryKey(),
+  publicId: text('public_id').notNull().unique(), // e.g. STY-BILL-XYZ
+  propertyId: text('property_id').notNull().references(() => properties.id),
+  ownerId: text('owner_id').notNull().references(() => users.id),
+  tenantId: text('tenant_id').notNull().references(() => users.id),
+  amount: integer('amount').notNull(), // in rupees
+  description: text('description').notNull(), // "Rent for Sep 2026", "Maintenance"
+  status: text('status', { enum: ['PENDING', 'PAID', 'OVERDUE', 'CANCELLED'] }).notNull().default('PENDING'),
+  dueDate: integer('due_date', { mode: 'timestamp' }),
+  paidAt: integer('paid_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});

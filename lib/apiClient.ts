@@ -1,6 +1,6 @@
 // Frontend API Client for communicating with the Hono backend
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://hsrpg-api.pginbengaluru72.workers.dev';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://staysure-api.pginbengaluru72.workers.dev';
 
 export class ApiError extends Error {
   code: string;
@@ -82,6 +82,11 @@ export const ownerApi = {
   getTickets: () => fetchApi<any>('/api/owner/complaints', { method: 'GET' }),
   getTenants: () => fetchApi<any>('/api/owner/tenants', { method: 'GET' }),
   createTenant: (data: any) => fetchApi<any>('/api/owner/tenants/create', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // Billing
+  getBills: () => fetchApi<any>('/api/owner/bills', { method: 'GET' }),
+  createBill: (data: any) => fetchApi<any>('/api/owner/bills/create', { method: 'POST', body: JSON.stringify(data) }),
+  markBillPaid: (id: string) => fetchApi<any>(`/api/owner/bills/${id}/mark-paid`, { method: 'POST' }),
 };
 
 // ------------------------------------------------------------
@@ -114,4 +119,7 @@ export const customerApi = {
   getMyFavorites: () => fetchApi<any>('/api/customer/favorites', { method: 'GET' }),
   getTickets: () => fetchApi<any>('/api/customer/complaints', { method: 'GET' }),
   createTicket: (data: any) => fetchApi<any>('/api/customer/complaints', { method: 'POST', body: JSON.stringify(data) }),
+  
+  // Billing
+  getBills: () => fetchApi<any>('/api/customer/bills', { method: 'GET' }),
 };

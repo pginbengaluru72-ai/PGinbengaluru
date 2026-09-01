@@ -1,6 +1,6 @@
-# HSRPG Architecture & AI Agent Instruction Manual
+# StaySure Architecture & AI Agent Instruction Manual
 
-> **AI INSTRUCTION:** If you are an AI reading this file, you are now the maintainer of the HSRPG platform. Read this entire document before writing any code. Do NOT assume this is a standard Next.js template. We use a highly customized, ultra-premium architecture heavily reliant on Cloudflare.
+> **AI INSTRUCTION:** If you are an AI reading this file, you are now the maintainer of the StaySure platform. Read this entire document before writing any code. Do NOT assume this is a standard Next.js template. We use a highly customized, ultra-premium architecture heavily reliant on Cloudflare.
 
 ## 1. Tech Stack & Infrastructure
 - **Frontend Framework:** Next.js 16 (App Router) with React 19.

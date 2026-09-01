@@ -12,8 +12,8 @@ import { adminApi } from "@/lib/apiClient"
 export default function SuperAdminSettingsPage() {
   const [isSaved, setIsSaved] = useState(false)
   const [settings, setSettings] = useState({
-    platformName: "HSRPG Bengaluru",
-    supportEmail: "admin@hsrpg.in",
+    platformName: "StaySure Bengaluru",
+    supportEmail: "admin@staysure.in",
     autoVerifyListings: false,
     maintenanceMode: false
   })

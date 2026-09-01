@@ -216,7 +216,7 @@ export default function AccountSettingsPage() {
               </a>
 
               <a 
-                href="mailto:support@hsrpg.in"
+                href="mailto:support@staysure.in"
                 className="w-9 h-9 rounded-2xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-950 dark:border-red-800 dark:text-red-400 flex items-center justify-center hover:scale-105 transition-transform"
               >
                 <Mail className="w-4 h-4" />

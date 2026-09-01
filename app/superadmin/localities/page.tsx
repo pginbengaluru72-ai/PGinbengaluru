@@ -56,7 +56,7 @@ export default function SuperAdminLocalitiesPage() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold">Add New Area</CardTitle>
-                  <CardDescription className="font-medium mt-1">Expand HSRPG coverage.</CardDescription>
+                  <CardDescription className="font-medium mt-1">Expand StaySure coverage.</CardDescription>
                 </div>
               </div>
             </CardHeader>

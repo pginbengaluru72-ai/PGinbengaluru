@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <SidebarContent>
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xl font-extrabold text-white px-4 py-8 tracking-tight">
-                  HSRPG <span className="text-blue-400">Owner</span>
+                  StaySure <span className="text-blue-400">Owner</span>
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-2 px-2">

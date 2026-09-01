@@ -90,7 +90,7 @@ export default function AuthPage() {
           <Link href="/" className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-xl shadow-indigo-100 mb-4 transition-transform hover:scale-105">
             <Home className="w-8 h-8 text-indigo-600" />
           </Link>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">HSRPG Platform</h1>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">StaySure Platform</h1>
           <p className="text-slate-500 mt-2">Sign in to manage your spaces</p>
         </div>
 

@@ -420,7 +420,7 @@ ownerRouter.post('/upload', async (c) => {
     httpMetadata: { contentType: file.type }
   });
 
-  const url = `https://hsrpg-images.pginbengaluru72.workers.dev/${key}`;
+  const url = `https://staysure-images.pginbengaluru72.workers.dev/${key}`;
   
   await db.insert(schema.propertyPhotos).values({
     id: crypto.randomUUID(),
@@ -536,4 +536,90 @@ ownerRouter.post('/tenants/create', async (c) => {
   }, 201);
 });
 
+// ============================================================
+// BILLING SYSTEM
+// ============================================================
+
+ownerRouter.post('/bills/create', requireAuth(), requireRole('OWNER'), async (c) => {
+  const user = c.get('user');
+  const body = await c.req.json().catch(() => null);
+  if (!body || !body.propertyId || !body.tenantId || !body.amount || !body.description) {
+    return apiError(c, 400, 'MISSING_FIELDS', 'propertyId, tenantId, amount, and description are required.');
+  }
+
+  const db = drizzle(c.env.DB, { schema });
+  
+  // Verify ownership
+  const property = await verifyPropertyOwnership(db as any, user.id, body.propertyId);
+  if (!property) return apiError(c, 403, 'FORBIDDEN', 'You do not own this property.');
+
+  const timestamp = Date.now().toString(36);
+  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  const publicId = `STY-BILL-${timestamp}${randomSuffix}`.toUpperCase();
+  const now = new Date();
+
+  await db.insert(schema.bills).values({
+    id: crypto.randomUUID(),
+    publicId,
+    propertyId: body.propertyId,
+    ownerId: user.id,
+    tenantId: body.tenantId,
+    amount: parseInt(body.amount, 10),
+    description: body.description.trim(),
+    status: 'PENDING',
+    dueDate: body.dueDate ? new Date(body.dueDate) : null,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return apiSuccess(c, { message: 'Bill created successfully.', publicId }, 201);
+});
+
+ownerRouter.get('/bills', requireAuth(), requireRole('OWNER'), async (c) => {
+  const user = c.get('user');
+  const db = drizzle(c.env.DB, { schema });
+
+  const rows = await db.select({
+    id: schema.bills.id,
+    publicId: schema.bills.publicId,
+    amount: schema.bills.amount,
+    description: schema.bills.description,
+    status: schema.bills.status,
+    dueDate: schema.bills.dueDate,
+    createdAt: schema.bills.createdAt,
+    propertyName: schema.properties.name,
+    tenantName: schema.users.name,
+    tenantPhone: schema.users.phone,
+  }).from(schema.bills)
+    .innerJoin(schema.properties, eq(schema.bills.propertyId, schema.properties.id))
+    .innerJoin(schema.users, eq(schema.bills.tenantId, schema.users.id))
+    .where(eq(schema.bills.ownerId, user.id))
+    .orderBy(desc(schema.bills.createdAt));
+
+  return apiSuccess(c, { bills: rows });
+});
+
+ownerRouter.post('/bills/:id/mark-paid', requireAuth(), requireRole('OWNER'), async (c) => {
+  const user = c.get('user');
+  const billId = c.req.param('id'); // can be publicId or id
+  const db = drizzle(c.env.DB, { schema });
+  const now = new Date();
+
+  const rows = await db.update(schema.bills).set({
+    status: 'PAID',
+    paidAt: now,
+    updatedAt: now,
+  }).where(and(
+    eq(schema.bills.publicId, billId),
+    eq(schema.bills.ownerId, user.id)
+  )).returning({ id: schema.bills.id });
+
+  if (rows.length === 0) {
+    return apiError(c, 404, 'NOT_FOUND', 'Bill not found or unauthorized.');
+  }
+
+  return apiSuccess(c, { message: 'Bill marked as paid.' });
+});
+
 export default ownerRouter;
+
