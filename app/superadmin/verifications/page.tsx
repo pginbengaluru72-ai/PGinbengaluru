@@ -132,11 +132,19 @@ export default function VerificationsPage() {
                       </div>
                       {v.amenities && (
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {Object.entries(JSON.parse(v.amenities)).filter(([_, val]) => val).map(([key]) => (
-                            <span key={key} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded-md font-medium capitalize">
-                              {key}
-                            </span>
-                          ))}
+                          {(() => {
+                            try {
+                              return Object.entries(JSON.parse(v.amenities))
+                                .filter(([_, val]) => val)
+                                .map(([key]) => (
+                                  <span key={key} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded-md font-medium capitalize">
+                                    {key}
+                                  </span>
+                                ));
+                            } catch(e) {
+                              return <span className="text-xs text-red-500">Invalid amenities data</span>;
+                            }
+                          })()}
                         </div>
                       )}
                     </div>

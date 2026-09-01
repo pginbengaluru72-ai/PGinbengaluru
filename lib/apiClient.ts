@@ -22,11 +22,20 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+  } catch (error: any) {
+    throw new ApiError(
+      'Network Error: Could not connect to StaySure API. Please check your connection.',
+      'NETWORK_ERROR',
+      0
+    );
+  }
 
   const data = await response.json().catch(() => null);
 

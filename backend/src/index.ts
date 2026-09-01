@@ -38,6 +38,8 @@ app.use('*', cors({
     if (!origin) return 'https://pginbengaluru.pages.dev';
     const allowed = [
       'https://pginbengaluru.pages.dev',
+      'https://hsrpg.in',
+      'https://staysure.in',
       'http://localhost:5173',
       'http://localhost:3000',
     ];
