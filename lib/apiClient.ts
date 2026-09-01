@@ -110,6 +110,8 @@ export const adminApi = {
   createOwner: (data: any) => fetchApi<any>('/api/admin/owners/create', { method: 'POST', body: JSON.stringify(data) }),
   getAuditLogs: (page = 1) => fetchApi<any>(`/api/admin/audit-logs?page=${page}`, { method: 'GET' }),
   sendBroadcast: (data: any) => fetchApi<any>('/api/admin/broadcast', { method: 'POST', body: JSON.stringify(data) }),
+  getLocalities: () => fetchApi<any>('/api/admin/localities', { method: 'GET' }),
+  saveLocalities: (localities: any[]) => fetchApi<any>('/api/admin/localities', { method: 'POST', body: JSON.stringify({ localities }) }),
 };
 
 // ------------------------------------------------------------

@@ -137,7 +137,7 @@ const INITIAL_TICKETS: MaintenanceTicket[] = [
 ]
 
 // API Base URL for Worker D1 Backend
-const API_BASE = "https://staysure-api.pginbengaluru72.workers.dev/api"
+const API_BASE = "https://hsrpg-api.pginbengaluru72.workers.dev/api"
 
 // Helper for Robust LocalStorage & SSR Persistence
 function getStored<T>(key: string, fallback: T): T {

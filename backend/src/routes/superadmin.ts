@@ -259,4 +259,53 @@ superadminRouter.post('/broadcast', async (c) => {
   return apiSuccess(c, { message: 'Broadcast pushed successfully.' }, 201);
 });
 
+// ============================================================
+// GET /api/admin/localities — Get active localities
+// ============================================================
+superadminRouter.get('/localities', async (c) => {
+  const db = drizzle(c.env.DB, { schema });
+  const [setting] = await db.select().from(schema.platformSettings).where(eq(schema.platformSettings.key, 'active_localities')).limit(1);
+  
+  if (!setting || !setting.value) return apiSuccess(c, { localities: [] });
+  
+  try {
+    const localities = JSON.parse(setting.value);
+    return apiSuccess(c, { localities });
+  } catch (e) {
+    return apiSuccess(c, { localities: [] });
+  }
+});
+
+// ============================================================
+// POST /api/admin/localities — Update localities
+// ============================================================
+superadminRouter.post('/localities', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body?.localities || !Array.isArray(body.localities)) {
+    return apiError(c, 400, 'INVALID_BODY', 'Localities array is required.');
+  }
+
+  const db = drizzle(c.env.DB, { schema });
+  const user = c.get('user');
+  const now = new Date();
+
+  const localitiesData = JSON.stringify(body.localities);
+
+  await db.insert(schema.platformSettings).values({
+    key: 'active_localities',
+    value: localitiesData,
+    updatedBy: user.id,
+    updatedAt: now,
+  }).onConflictDoUpdate({
+    target: schema.platformSettings.key,
+    set: {
+      value: localitiesData,
+      updatedBy: user.id,
+      updatedAt: now,
+    }
+  });
+
+  return apiSuccess(c, { message: 'Localities updated successfully.' }, 201);
+});
+
 export default superadminRouter;

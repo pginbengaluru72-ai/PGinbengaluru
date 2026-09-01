@@ -420,7 +420,7 @@ ownerRouter.post('/upload', async (c) => {
     httpMetadata: { contentType: file.type }
   });
 
-  const url = `https://staysure-images.pginbengaluru72.workers.dev/${key}`;
+  const url = `https://hsrpg-images.pginbengaluru72.workers.dev/${key}`;
   
   await db.insert(schema.propertyPhotos).values({
     id: crypto.randomUUID(),
