@@ -30,11 +30,16 @@ function SearchResultsContent() {
   const query = searchParams.get('q') || ''
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(['BOYS', 'GIRLS', 'COLIVING'])
 
   const syncState = async () => {
     try {
       setLoading(true)
-      const res = await customerApi.searchProperties(query ? { query } : {})
+      const payload: any = {}
+      if (query) payload.query = query
+      if (selectedTypes.length > 0) payload.type = selectedTypes.join(',')
+      
+      const res = await customerApi.searchProperties(payload)
       if (res?.properties) {
         setProperties(res.properties)
       }
@@ -47,7 +52,15 @@ function SearchResultsContent() {
 
   useEffect(() => {
     syncState()
-  }, [query])
+  }, [query, selectedTypes])
+
+  const toggleType = (typeVal: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(typeVal) 
+        ? prev.filter(t => t !== typeVal) 
+        : [...prev, typeVal]
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-10 pb-20 relative overflow-hidden">
@@ -94,10 +107,19 @@ function SearchResultsContent() {
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Category Filter</Label>
                 <div className="space-y-2 text-xs font-bold">
-                  {['Boys PG', 'Girls PG', 'Co-live / Unisex'].map((type) => (
-                    <label key={type} className="flex items-center gap-3 text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600">
-                      <input type="checkbox" defaultChecked className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
-                      {type}
+                  {[
+                    { label: 'Boys PG', val: 'BOYS' }, 
+                    { label: 'Girls PG', val: 'GIRLS' }, 
+                    { label: 'Co-live / Unisex', val: 'COLIVING' }
+                  ].map((type) => (
+                    <label key={type.val} className="flex items-center gap-3 text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTypes.includes(type.val)}
+                        onChange={() => toggleType(type.val)}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" 
+                      />
+                      {type.label}
                     </label>
                   ))}
                 </div>

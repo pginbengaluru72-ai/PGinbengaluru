@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc, and, sql, like, gte, lte } from 'drizzle-orm';
+import { eq, desc, and, sql, like, gte, lte, inArray } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requireAuth, requireRole, apiError, apiSuccess, type AuthUser } from '../lib/middleware';
 
@@ -23,13 +23,16 @@ customerRouter.get('/properties', async (c) => {
   const type = c.req.query('type'); // BOYS, GIRLS, COLIVING
   const search = c.req.query('q');
 
-  // Only show PUBLISHED properties to customers
-  let conditions = [eq(schema.properties.status, 'PUBLISHED')];
+  // Only show VERIFIED and PUBLISHED properties to customers
+  let conditions = [inArray(schema.properties.status, ['VERIFIED', 'PUBLISHED'])];
 
   if (city) conditions.push(eq(schema.properties.city, city));
   if (locality) conditions.push(eq(schema.properties.locality, locality));
-  if (type && ['BOYS', 'GIRLS', 'COLIVING'].includes(type)) {
-    conditions.push(eq(schema.properties.type, type as any));
+  if (type) {
+    const typesArray = type.split(',').filter(t => ['BOYS', 'GIRLS', 'COLIVING'].includes(t));
+    if (typesArray.length > 0) {
+      conditions.push(inArray(schema.properties.type, typesArray as any));
+    }
   }
   if (search) {
     conditions.push(like(schema.properties.name, `%${search}%`));
@@ -73,7 +76,7 @@ customerRouter.get('/properties/:id', async (c) => {
   const rows = await db.select().from(schema.properties)
     .where(and(
       eq(schema.properties.publicId, publicId),
-      eq(schema.properties.status, 'PUBLISHED')
+      inArray(schema.properties.status, ['VERIFIED', 'PUBLISHED'])
     ))
     .limit(1);
 
@@ -142,10 +145,13 @@ customerRouter.post('/applications', requireAuth(), requireRole('CUSTOMER'), asy
 
   const db = drizzle(c.env.DB, { schema });
 
-  // Verify property is published
+  // Verify property is valid
   const property = await db.select({ id: schema.properties.id })
     .from(schema.properties)
-    .where(and(eq(schema.properties.publicId, propertyId), eq(schema.properties.status, 'PUBLISHED')))
+    .where(and(
+      eq(schema.properties.publicId, propertyId),
+      inArray(schema.properties.status, ['VERIFIED', 'PUBLISHED'])
+    ))
     .limit(1);
 
   if (property.length === 0) {
