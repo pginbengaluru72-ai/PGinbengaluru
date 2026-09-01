@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "staysure-api",
+  "name": "hsrpg-api",
   "main": "src/index.ts",
   "compatibility_date": "2024-03-20",
   "compatibility_flags": [
@@ -9,7 +9,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "staysure-db",
+      "database_name": "hsrpg-db",
       "database_id": "64e4e051-182a-4c23-9fb0-65a6b694e7c2",
       "migrations_dir": "drizzle"
     }
@@ -17,7 +17,7 @@
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "staysure-images"
+      "bucket_name": "hsrpg-images"
     }
   ]
 }
