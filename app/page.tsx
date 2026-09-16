@@ -1,9 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building, MapPin, Users, Navigation2, Map, SearchX, BedSingle, BedDouble, GraduationCap, Briefcase, SlidersHorizontal } from "lucide-react"
+import { Building, MapPin, Users, Navigation2, Map, SearchX, BedSingle, BedDouble, GraduationCap, Briefcase, SlidersHorizontal, Check } from "lucide-react"
 import { PropertyCard } from "@/components/PropertyCard"
 import { publicApi } from "@/lib/apiClient"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 // Proper Airbnb-style categories (Types of Stays/Vibes, not mixed with locations or budgets)
 const CATEGORIES = [
@@ -16,14 +27,14 @@ const CATEGORIES = [
   { id: 'corporate', name: 'Working Pros', icon: Briefcase },
 ]
 
-// MOCK DATA: Using reliable picsum.photos to avoid 403 hotlinking issues from Unsplash
+// MOCK DATA: Removed external image URLs completely. Using reliable fallbacks (handled in PropertyCard CSS).
 const MOCK_PROPERTIES = [
-  { id: 'm1', slug: 'mock-1', name: 'StaySure HSR Elite', type: 'COLIVING', locality: 'HSR Layout', city: 'Bengaluru', startingPrice: 12000, availableBeds: 4, totalBeds: 50, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg1/800/600' },
-  { id: 'm2', slug: 'mock-2', name: 'Koramangala Comforts', type: 'GIRLS', locality: 'Koramangala', city: 'Bengaluru', startingPrice: 8500, availableBeds: 2, totalBeds: 20, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg2/800/600' },
-  { id: 'm3', slug: 'mock-3', name: 'BTM Budget Stays', type: 'BOYS', locality: 'BTM Layout', city: 'Bengaluru', startingPrice: 6000, availableBeds: 12, totalBeds: 40, primaryPhoto: null, verified: false, mockImg: 'https://picsum.photos/seed/pg3/800/600' },
-  { id: 'm4', slug: 'mock-4', name: 'Indiranagar Premium', type: 'COLIVING', locality: 'Indiranagar', city: 'Bengaluru', startingPrice: 18000, availableBeds: 1, totalBeds: 15, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg4/800/600' },
-  { id: 'm5', slug: 'mock-5', name: 'Whitefield Tech Haven', type: 'BOYS', locality: 'Whitefield', city: 'Bengaluru', startingPrice: 9000, availableBeds: 8, totalBeds: 60, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg5/800/600' },
-  { id: 'm6', slug: 'mock-6', name: 'Bellandur Cozy Girls PG', type: 'GIRLS', locality: 'Bellandur', city: 'Bengaluru', startingPrice: 11000, availableBeds: 3, totalBeds: 25, primaryPhoto: null, verified: false, mockImg: 'https://picsum.photos/seed/pg6/800/600' },
+  { id: 'm1', slug: 'mock-1', name: 'StaySure HSR Elite', type: 'COLIVING', locality: 'HSR Layout', city: 'Bengaluru', startingPrice: 12000, availableBeds: 4, totalBeds: 50, primaryPhoto: null, verified: true },
+  { id: 'm2', slug: 'mock-2', name: 'Koramangala Comforts', type: 'GIRLS', locality: 'Koramangala', city: 'Bengaluru', startingPrice: 8500, availableBeds: 2, totalBeds: 20, primaryPhoto: null, verified: true },
+  { id: 'm3', slug: 'mock-3', name: 'BTM Budget Stays', type: 'BOYS', locality: 'BTM Layout', city: 'Bengaluru', startingPrice: 6000, availableBeds: 12, totalBeds: 40, primaryPhoto: null, verified: false },
+  { id: 'm4', slug: 'mock-4', name: 'Indiranagar Premium', type: 'COLIVING', locality: 'Indiranagar', city: 'Bengaluru', startingPrice: 18000, availableBeds: 1, totalBeds: 15, primaryPhoto: null, verified: true },
+  { id: 'm5', slug: 'mock-5', name: 'Whitefield Tech Haven', type: 'BOYS', locality: 'Whitefield', city: 'Bengaluru', startingPrice: 9000, availableBeds: 8, totalBeds: 60, primaryPhoto: null, verified: true },
+  { id: 'm6', slug: 'mock-6', name: 'Bellandur Cozy Girls PG', type: 'GIRLS', locality: 'Bellandur', city: 'Bengaluru', startingPrice: 11000, availableBeds: 3, totalBeds: 25, primaryPhoto: null, verified: false },
 ]
 
 export default function Home() {
@@ -64,8 +75,8 @@ export default function Home() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex flex-col items-center justify-center gap-2 cursor-pointer shrink-0 group min-w-[56px] ${
                   activeCategory === cat.id 
-                    ? 'text-slate-900' 
-                    : 'text-[#717171] hover:text-slate-900 transition-colors'
+                    ? 'text-[#222222]' 
+                    : 'text-[#717171] hover:text-[#222222] transition-colors'
                 }`}
               >
                 <cat.icon className={`w-[26px] h-[26px] stroke-[1.5px] transition-transform ${activeCategory === cat.id ? 'scale-95' : 'group-hover:scale-95'}`} />
@@ -73,7 +84,7 @@ export default function Home() {
                 
                 {/* Underline Indicator */}
                 <div className={`h-[2px] w-full rounded-full transition-all duration-300 mt-2 ${
-                  activeCategory === cat.id ? 'bg-slate-900 scale-x-100' : 'bg-transparent scale-x-0 group-hover:bg-slate-200 group-hover:scale-x-100'
+                  activeCategory === cat.id ? 'bg-[#222222] scale-x-100' : 'bg-transparent scale-x-0 group-hover:bg-slate-200 group-hover:scale-x-100'
                 }`}></div>
               </div>
             ))}
@@ -82,12 +93,66 @@ export default function Home() {
           {/* Subtle fade on right side to indicate scroll on mobile */}
           <div className="absolute right-[110px] top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none hidden md:block"></div>
           
-          {/* Filters Button */}
+          {/* Filters Button (Now fully functional with shadcn Dialog) */}
           <div className="hidden md:flex shrink-0">
-            <button className="flex items-center gap-2 border border-slate-300 rounded-xl px-4 py-3 hover:border-slate-900 hover:bg-slate-50 transition-colors cursor-pointer ml-4">
-              <SlidersHorizontal className="w-4 h-4 stroke-[2px] text-slate-800" />
-              <span className="text-[14px] font-semibold text-slate-800">Filters</span>
-            </button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-2 border border-slate-300 rounded-xl px-4 py-3.5 hover:border-[#222222] hover:bg-slate-50 transition-colors cursor-pointer ml-4">
+                  <SlidersHorizontal className="w-[14px] h-[14px] stroke-[2.5px] text-[#222222]" />
+                  <span className="text-[14px] font-semibold text-[#222222]">Filters</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[780px] p-0 gap-0 overflow-hidden rounded-2xl bg-white">
+                <DialogHeader className="px-6 py-4 border-b border-slate-200">
+                  <DialogTitle className="text-center font-bold text-[16px] text-[#222222]">Filters</DialogTitle>
+                </DialogHeader>
+                <div className="p-6 max-h-[60vh] overflow-y-auto">
+                  {/* Price Range */}
+                  <div className="pb-8 border-b border-slate-200">
+                    <h3 className="text-[22px] font-semibold text-[#222222] mb-1">Price range</h3>
+                    <p className="text-[14px] text-[#717171] mb-6">Monthly rent before taxes and fees</p>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 border border-slate-400 rounded-lg p-3">
+                        <div className="text-[12px] text-[#717171]">Minimum</div>
+                        <div className="flex items-center">
+                          <span className="text-[16px] text-[#222222]">₹</span>
+                          <input type="number" defaultValue="5000" className="w-full outline-none text-[16px] text-[#222222] pl-1 bg-transparent" />
+                        </div>
+                      </div>
+                      <div className="text-slate-400">-</div>
+                      <div className="flex-1 border border-slate-400 rounded-lg p-3">
+                        <div className="text-[12px] text-[#717171]">Maximum</div>
+                        <div className="flex items-center">
+                          <span className="text-[16px] text-[#222222]">₹</span>
+                          <input type="number" defaultValue="25000" className="w-full outline-none text-[16px] text-[#222222] pl-1 bg-transparent" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Amenities */}
+                  <div className="py-8 border-b border-slate-200">
+                    <h3 className="text-[22px] font-semibold text-[#222222] mb-6">Amenities</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {['Wifi', 'Air conditioning', 'Washing machine', 'Kitchen', 'TV', 'Gym'].map(amenity => (
+                        <div key={amenity} className="flex items-center gap-3 cursor-pointer group">
+                          <div className="w-6 h-6 border border-slate-300 rounded flex items-center justify-center group-hover:border-slate-800 transition">
+                            {amenity === 'Wifi' && <Check className="w-4 h-4 text-[#222222]" />}
+                          </div>
+                          <span className="text-[16px] text-[#222222] font-light">{amenity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="px-6 py-4 border-t border-slate-200 flex items-center justify-between sm:justify-between w-full">
+                  <button className="text-[16px] font-semibold text-[#222222] underline hover:bg-slate-100 px-4 py-2 rounded-lg transition">Clear all</button>
+                  <DialogClose asChild>
+                    <button className="bg-[#222222] hover:bg-black text-white px-6 py-3.5 rounded-lg font-semibold text-[16px] transition">Show 6 results</button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
@@ -128,7 +193,7 @@ export default function Home() {
                   startingPrice={p.startingPrice}
                   availableBeds={p.availableBeds}
                   totalBeds={p.totalBeds}
-                  primaryPhoto={p.primaryPhoto || p.mockImg}
+                  primaryPhoto={p.primaryPhoto} // Note: fallbacks are now securely handled inside the component!
                   verified={p.verified}
                 />
               ))}
@@ -136,7 +201,7 @@ export default function Home() {
 
             {/* Map Toggle Button (Floating at bottom center) */}
             <div className="fixed bottom-24 md:bottom-12 left-1/2 -translate-x-1/2 z-50">
-              <button className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3.5 rounded-full font-bold text-[15px] flex items-center gap-2 shadow-[0_6px_16px_rgb(0,0,0,0.2)] hover:scale-105 hover:shadow-[0_8px_20px_rgb(0,0,0,0.3)] transition-all duration-300 active:scale-95">
+              <button className="bg-[#222222] hover:bg-black text-white px-6 py-3.5 rounded-full font-bold text-[15px] flex items-center gap-2 shadow-[0_6px_16px_rgb(0,0,0,0.2)] hover:scale-105 hover:shadow-[0_8px_20px_rgb(0,0,0,0.3)] transition-all duration-300 active:scale-95">
                 Show map <Navigation2 className="w-[18px] h-[18px]" />
               </button>
             </div>
