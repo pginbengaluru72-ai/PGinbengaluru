@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { fetchPublicApi } from '@/lib/apiClient'
 import PropertyDetailClient from './PropertyDetailClient'
 
+export const runtime = 'edge';
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
