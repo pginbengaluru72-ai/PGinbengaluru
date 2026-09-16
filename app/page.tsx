@@ -22,7 +22,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState('all')
 
   useEffect(() => {
-    publicApi.getFeaturedProperties()
+    publicApi.searchProperties()
       .then(res => setProperties(res.properties))
       .catch(console.error)
       .finally(() => setLoading(false))
