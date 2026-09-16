@@ -1,207 +1,245 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useSearchParams } from 'next/navigation'
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { MapPin, Bed, CheckCircle, Search, Filter, ShieldCheck } from "lucide-react"
-import Link from "next/link"
+import { MapPin, Search, Filter, SlidersHorizontal, X, ChevronDown } from "lucide-react"
 import { motion } from "framer-motion"
-import { customerApi } from "@/lib/apiClient"
+import { publicApi } from "@/lib/apiClient"
+import { PropertyCard } from "@/components/PropertyCard"
 
-const container: any = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-}
+const PG_TYPES = [
+  { label: 'Boys PG', value: 'BOYS' },
+  { label: 'Girls PG', value: 'GIRLS' },
+  { label: 'Co-Living', value: 'COLIVING' },
+]
 
-const item: any = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-}
+const PRICE_RANGES = [
+  { label: 'Under ₹5,000', min: '0', max: '5000' },
+  { label: '₹5,000 - ₹8,000', min: '5000', max: '8000' },
+  { label: '₹8,000 - ₹12,000', min: '8000', max: '12000' },
+  { label: '₹12,000 - ₹18,000', min: '12000', max: '18000' },
+  { label: '₹18,000+', min: '18000', max: '' },
+]
 
-function SearchResultsContent() {
+function SearchContent() {
   const searchParams = useSearchParams()
-  const query = searchParams.get('q') || ''
+  const router = useRouter()
+  const initialQuery = searchParams.get('q') || ''
+  const initialLocality = searchParams.get('locality') || ''
+
+  const [query, setQuery] = useState(initialQuery)
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  const [selectedPrice, setSelectedPrice] = useState<{ min: string; max: string } | null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(['BOYS', 'GIRLS', 'COLIVING'])
-
-  const syncState = async () => {
-    try {
-      setLoading(true)
-      const payload: any = {}
-      if (query) payload.query = query
-      if (selectedTypes.length > 0) payload.type = selectedTypes.join(',')
-      
-      const res = await customerApi.searchProperties(payload)
-      if (res?.properties) {
-        setProperties(res.properties)
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [total, setTotal] = useState(0)
+  const [showFilters, setShowFilters] = useState(false)
+  const [localities, setLocalities] = useState<any[]>([])
+  const [selectedLocality, setSelectedLocality] = useState(initialLocality)
 
   useEffect(() => {
-    syncState()
-  }, [query, selectedTypes])
+    publicApi.getLocalities().then(res => setLocalities(res?.localities || [])).catch(() => {})
+  }, [])
 
-  const toggleType = (typeVal: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(typeVal) 
-        ? prev.filter(t => t !== typeVal) 
-        : [...prev, typeVal]
-    )
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true)
+      try {
+        const params: Record<string, string> = {}
+        if (query) params.q = query
+        if (selectedTypes.length > 0) params.type = selectedTypes.join(',')
+        if (selectedPrice?.min) params.minPrice = selectedPrice.min
+        if (selectedPrice?.max) params.maxPrice = selectedPrice.max
+        if (selectedLocality) params.locality = selectedLocality
+
+        const res = await publicApi.searchProperties(params)
+        setProperties(res?.properties || [])
+        setTotal(res?.pagination?.total || 0)
+      } catch {
+        setProperties([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProperties()
+  }, [query, selectedTypes, selectedPrice, selectedLocality])
+
+  const toggleType = (val: string) => {
+    setSelectedTypes(prev => prev.includes(val) ? prev.filter(t => t !== val) : [...prev, val])
   }
 
+  const clearFilters = () => {
+    setSelectedTypes([])
+    setSelectedPrice(null)
+    setSelectedLocality('')
+    setQuery('')
+  }
+
+  const hasActiveFilters = selectedTypes.length > 0 || selectedPrice || selectedLocality
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-10 pb-20 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-indigo-50/50 dark:from-indigo-900/20 to-transparent pointer-events-none" />
-      
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-6 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Search Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
-        >
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Search Results {query ? `for "${query}"` : ''}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {query ? `PGs matching "${query}"` : selectedLocality ? `PGs in ${selectedLocality}` : 'All Verified PGs'}
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg font-medium">Found {properties.length} PG properties across active Bangalore localities.</p>
-        </motion.div>
+          <p className="text-slate-500 mt-1 text-sm font-medium">
+            {loading ? 'Searching...' : `${total} properties found`}
+          </p>
+        </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Smart Filters Sidebar */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="w-full lg:w-72 shrink-0 space-y-6"
+        {/* Search Bar + Filter Toggle */}
+        <div className="flex gap-3 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search by name or locality..."
+              className="pl-10 h-11 rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`rounded-xl h-11 px-4 ${hasActiveFilters ? 'border-indigo-500 text-indigo-600 bg-indigo-50 dark:bg-indigo-950' : ''}`}
           >
-            <div className="bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl p-6 rounded-3xl shadow-xl border border-white dark:border-slate-800 space-y-8 sticky top-24">
-              <div className="flex items-center gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl">
-                  <Filter className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white">Active Areas</h3>
-              </div>
+            <SlidersHorizontal className="w-4 h-4 mr-2" />
+            Filters {hasActiveFilters && '•'}
+          </Button>
+        </div>
 
-              <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Super Admin Coverage</Label>
-                <div className="space-y-2.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar text-xs font-bold text-slate-500">
-                  Filters are currently disabled while we fetch data directly from the verified database.
-                </div>
-              </div>
+        {/* Filters Panel */}
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">Filters</h3>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs text-indigo-600 font-semibold hover:underline">
+                  Clear All
+                </button>
+              )}
+            </div>
 
-              <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Category Filter</Label>
-                <div className="space-y-2 text-xs font-bold">
-                  {[
-                    { label: 'Boys PG', val: 'BOYS' }, 
-                    { label: 'Girls PG', val: 'GIRLS' }, 
-                    { label: 'Co-live / Unisex', val: 'COLIVING' }
-                  ].map((type) => (
-                    <label key={type.val} className="flex items-center gap-3 text-slate-700 dark:text-slate-300 cursor-pointer hover:text-indigo-600 transition-colors">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedTypes.includes(type.val)}
-                        onChange={() => toggleType(type.val)}
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" 
-                      />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* PG Type */}
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">PG Type</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PG_TYPES.map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => toggleType(type.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        selectedTypes.includes(type.value)
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-100'
+                      }`}
+                    >
                       {type.label}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
+
+              {/* Price Range */}
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Price Range</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PRICE_RANGES.map(range => (
+                    <button
+                      key={range.label}
+                      onClick={() => setSelectedPrice(selectedPrice?.min === range.min ? null : range)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        selectedPrice?.min === range.min
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-100'
+                      }`}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Locality */}
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Locality</Label>
+                <select
+                  value={selectedLocality}
+                  onChange={e => setSelectedLocality(e.target.value)}
+                  className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm px-3 text-slate-700 dark:text-slate-300"
+                >
+                  <option value="">All Localities</option>
+                  {localities.map((loc: any) => (
+                    <option key={loc.id} value={loc.area}>{loc.area} — {loc.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </motion.div>
+        )}
 
-          {/* Results Grid */}
-          <div className="flex-1">
-            <motion.div 
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              {properties.length === 0 && !loading && (
-                <div className="col-span-full py-12 text-center text-slate-500 font-bold">
-                  No properties found. Try a different search query.
-                </div>
-              )}
-              {properties.map((prop, idx) => (
-                <motion.div variants={item} key={prop.id}>
-                  <Link href={`/pg/${prop.publicId}`} className="group block h-full">
-                    <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex flex-col border border-slate-200/60 dark:border-slate-800">
-                      <div className="relative h-52 overflow-hidden bg-slate-200 shrink-0">
-                        <img 
-                          src={prop.primaryPhotoUrl || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop"} 
-                          alt={prop.name} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        
-                        <div className="absolute top-3 left-3 z-10">
-                          <Badge className={`flex items-center gap-1.5 backdrop-blur-md shadow-md py-1.5 px-3 rounded-xl border-0 font-bold ${
-                            prop.isVerified ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
-                          }`}>
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            {prop.status === 'VERIFIED' ? 'Super Admin Verified' : 'Pending Verification'}
-                          </Badge>
-                        </div>
-                        <div className="absolute bottom-3 left-3 z-10">
-                          <Badge className="bg-black/60 text-white backdrop-blur-md border border-white/20 py-1 px-2.5 rounded-lg font-bold capitalize text-xs">
-                            {prop.type} PG
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-5 flex-1 flex flex-col">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors line-clamp-1">
-                            {prop.name}
-                          </h3>
-                        </div>
-                        <div className="flex items-center text-slate-500 font-medium text-xs mb-4">
-                          <MapPin className="h-3.5 w-3.5 mr-1 text-indigo-500 shrink-0" />
-                          <span className="line-clamp-1">{prop.locality}, {prop.city}</span>
-                        </div>
-                        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                          <div className="flex items-center text-xs text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 rounded-lg">
-                            <Bed className="h-3.5 w-3.5 mr-1" />
-                            {prop.availableBeds} Beds left
-                          </div>
-                          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform inline-flex items-center">
-                            View PG →
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
+        {/* Results Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-80 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            ))}
           </div>
-
-        </div>
+        ) : properties.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No PGs found</h3>
+            <p className="text-slate-500 text-sm">Try adjusting your search or filters.</p>
+            {hasActiveFilters && (
+              <Button variant="outline" onClick={clearFilters} className="mt-4 rounded-full">
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {properties.map((pg: any) => (
+              <PropertyCard
+                key={pg.id}
+                slug={pg.slug || pg.publicId}
+                name={pg.name}
+                type={pg.type}
+                locality={pg.locality}
+                city={pg.city}
+                startingPrice={pg.startingPrice}
+                availableBeds={pg.availableBeds}
+                totalBeds={pg.totalBeds}
+                amenities={pg.amenities}
+                primaryPhoto={pg.primaryPhoto}
+                verified={true}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-export default function SearchResultsPage() {
+export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-500">Loading Search...</div>}>
-      <SearchResultsContent />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <SearchContent />
     </Suspense>
   )
 }

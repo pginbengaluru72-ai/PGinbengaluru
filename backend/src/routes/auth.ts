@@ -11,8 +11,6 @@ type Variables = { user: AuthUser; requestId: string };
 
 const authRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// Public ID generators
-let userCounter = 0;
 function generatePublicId(prefix: string): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 6);
@@ -32,19 +30,17 @@ function setSessionCookie(c: any, token: string, maxAge: number) {
 }
 
 // ============================================================
-// POST /api/auth/register — Customer self-registration
+// POST /api/auth/register — Owner self-registration
 // ============================================================
 authRouter.post('/register', async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) return apiError(c, 400, 'INVALID_BODY', 'Invalid request body.');
 
-  const { email, password, name, phone, role } = body;
+  const { email, password, name, phone } = body;
 
   if (!email || !password || !name) {
     return apiError(c, 400, 'MISSING_FIELDS', 'Email, password, and name are required.');
   }
-
-  const userRole = role === 'OWNER' ? 'OWNER' : 'CUSTOMER';
 
   if (typeof email !== 'string' || !email.includes('@') || email.length > 254) {
     return apiError(c, 400, 'INVALID_EMAIL', 'Please provide a valid email address.');
@@ -60,7 +56,6 @@ authRouter.post('/register', async (c) => {
 
   const db = drizzle(c.env.DB, { schema });
 
-  // Check if email already exists
   const existing = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, email.toLowerCase().trim())).limit(1);
   if (existing.length > 0) {
     return apiError(c, 409, 'EMAIL_EXISTS', 'An account with this email already exists.');
@@ -71,6 +66,7 @@ authRouter.post('/register', async (c) => {
   const passwordHash = await hashPassword(password);
   const now = new Date();
 
+  // All self-registrations are OWNER role
   await db.insert(schema.users).values({
     id: userId,
     publicId,
@@ -78,7 +74,7 @@ authRouter.post('/register', async (c) => {
     phone: phone || null,
     name: name.trim(),
     passwordHash,
-    role: userRole,
+    role: 'OWNER',
     isActive: true,
     mustChangePassword: false,
     emailVerified: false,
@@ -86,24 +82,14 @@ authRouter.post('/register', async (c) => {
     updatedAt: now,
   });
 
-  if (userRole === 'OWNER') {
-    await db.insert(schema.ownerProfiles).values({
-      id: crypto.randomUUID(),
-      userId,
-      publicId: generatePublicId('STY-OWN'),
-      city: 'Bengaluru',
-      createdAt: now,
-      updatedAt: now,
-    });
-  } else {
-    await db.insert(schema.customerProfiles).values({
-      id: crypto.randomUUID(),
-      userId,
-      publicId: generatePublicId('STY-CUS'),
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
+  await db.insert(schema.ownerProfiles).values({
+    id: crypto.randomUUID(),
+    userId,
+    publicId: generatePublicId('STY-OWN'),
+    city: 'Bengaluru',
+    createdAt: now,
+    updatedAt: now,
+  });
 
   // Create session
   const sessionToken = generateSessionToken();
@@ -123,7 +109,7 @@ authRouter.post('/register', async (c) => {
   setSessionCookie(c, sessionToken, SESSION_DURATION_MS);
 
   return apiSuccess(c, {
-    user: { id: publicId, email: email.toLowerCase().trim(), name: name.trim(), role: 'CUSTOMER' }
+    user: { id: publicId, email: email.toLowerCase().trim(), name: name.trim(), role: 'OWNER' }
   }, 201);
 });
 
@@ -163,7 +149,6 @@ authRouter.post('/login', async (c) => {
     return apiError(c, 401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
   }
 
-  // Create session
   const sessionToken = generateSessionToken();
   const tokenHash = await hashSessionToken(sessionToken);
   const now = new Date();

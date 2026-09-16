@@ -1,62 +1,37 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Building, Plus, Search, Eye, Edit, Trash2, MapPin, Bed } from "lucide-react"
+import { Building, MapPin, Eye, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ownerApi } from "@/lib/apiClient"
+import { Input } from "@/components/ui/input"
+import { adminApi } from "@/lib/apiClient"
+import Link from "next/link"
 
-export default function OwnerPropertiesPage() {
+export default function AdminPropertiesPage() {
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
 
   useEffect(() => {
-    fetchProperties()
+    adminApi.getAllProperties()
+      .then(res => setProperties(res.properties))
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
-  const fetchProperties = async () => {
-    try {
-      const res = await ownerApi.getProperties()
-      setProperties(res.properties)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to archive this property?')) return
-    try {
-      await ownerApi.deleteProperty(id)
-      fetchProperties()
-    } catch (e) {
-      alert('Failed to archive property.')
-    }
-  }
-
-  const filteredProperties = properties.filter(p => 
+  const filtered = properties.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.locality.toLowerCase().includes(search.toLowerCase())
+    p.locality.toLowerCase().includes(search.toLowerCase()) ||
+    p.ownerName.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
     <div className="space-y-6">
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">My Properties</h1>
-          <p className="text-slate-500 mt-1 text-sm">Manage your listings, rooms, and availability.</p>
-        </div>
-        <Link href="/owner/properties/new">
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Property
-          </Button>
-        </Link>
+      <div>
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">All Properties</h1>
+        <p className="text-slate-500 mt-1 text-sm">Platform-wide view of all listed PGs.</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -65,7 +40,7 @@ export default function OwnerPropertiesPage() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search properties..." 
+              placeholder="Search properties or owners..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-10 rounded-xl bg-slate-50 dark:bg-slate-950/50"
@@ -75,16 +50,10 @@ export default function OwnerPropertiesPage() {
 
         {loading ? (
           <div className="p-8 text-center text-slate-500">Loading properties...</div>
-        ) : filteredProperties.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Building className="w-8 h-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No properties found</h3>
-            <p className="text-slate-500 text-sm mb-6">You haven't added any properties yet.</p>
-            <Link href="/owner/properties/new">
-              <Button className="rounded-xl">Add Your First Property</Button>
-            </Link>
+            <Building className="w-10 h-10 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-500">No properties found.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -92,26 +61,28 @@ export default function OwnerPropertiesPage() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-950/50">
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Property</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Owner</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Beds</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider">Metrics</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-500 tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredProperties.map(p => (
+                {filtered.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900 dark:text-white mb-1">{p.name}</div>
+                      <div className="font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                        {p.name}
+                        <Badge variant="outline" className="text-[10px] py-0">{p.type}</Badge>
+                      </div>
                       <div className="flex items-center text-xs text-slate-500">
                         <MapPin className="w-3 h-3 mr-1" />
-                        {p.locality}
+                        {p.locality}, {p.city}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="font-bold">
-                        {p.type === 'BOYS' ? 'Boys' : p.type === 'GIRLS' ? 'Girls' : 'Co-Living'}
-                      </Badge>
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{p.ownerName}</div>
+                      <div className="text-xs text-slate-500">{p.ownerEmail}</div>
                     </td>
                     <td className="px-6 py-4">
                       <Badge className={
@@ -123,9 +94,11 @@ export default function OwnerPropertiesPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                        <Bed className="w-4 h-4 mr-1.5 text-indigo-500" />
-                        {p.availableBeds}/{p.totalBeds}
+                      <div className="text-xs font-medium text-slate-500">
+                        <span className="text-slate-900 dark:text-white font-bold">{p.availableBeds}/{p.totalBeds}</span> beds left
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 mt-1">
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{p.leadCount}</span> leads
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -135,12 +108,6 @@ export default function OwnerPropertiesPage() {
                             <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-slate-500 hover:text-indigo-600">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} className="h-8 w-8 rounded-lg text-slate-500 hover:text-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
                     </td>
                   </tr>

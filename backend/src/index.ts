@@ -4,8 +4,8 @@ import { secureHeaders } from 'hono/secure-headers';
 import { requestId } from './lib/middleware';
 import authRouter from './routes/auth';
 import ownerRouter from './routes/owner';
-import superadminRouter from './routes/superadmin';
-import tenantRouter from './routes/tenant';
+import adminRouter from './routes/admin';
+import publicRouter from './routes/public';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import * as schema from './db/schema';
@@ -26,13 +26,9 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // GLOBAL MIDDLEWARE
 // ============================================================
 
-// Security headers
 app.use('*', secureHeaders());
-
-// Request ID for tracing
 app.use('*', requestId());
 
-// CORS — dynamic origin to support Pages preview URLs
 app.use('*', cors({
   origin: (origin) => {
     if (!origin) return 'https://pginbengaluru.pages.dev';
@@ -44,7 +40,6 @@ app.use('*', cors({
       'http://localhost:3000',
     ];
     if (allowed.includes(origin)) return origin;
-    // Allow all Cloudflare Pages preview subdomains
     if (origin.endsWith('.pginbengaluru.pages.dev')) return origin;
     return 'https://pginbengaluru.pages.dev';
   },
@@ -59,19 +54,19 @@ app.use('*', cors({
 // ============================================================
 
 // Health check
-app.get('/', (c) => c.json({ status: 'ok', service: 'StaySure API', version: '2.0.0' }));
+app.get('/', (c) => c.json({ status: 'ok', service: 'StaySure API', version: '3.0.0' }));
 
 // Auth (public + protected)
 app.route('/api/auth', authRouter);
+
+// Public APIs (no auth — search, listings, leads)
+app.route('/api/public', publicRouter);
 
 // Owner APIs (requires OWNER role)
 app.route('/api/owner', ownerRouter);
 
 // Admin APIs (requires SUPER_ADMIN role)
-app.route('/api/admin', superadminRouter);
-
-// Customer/Tenant APIs
-app.route('/api/customer', tenantRouter);
+app.route('/api/admin', adminRouter);
 
 // Public Broadcast API
 app.get('/api/broadcast', async (c) => {
@@ -91,20 +86,19 @@ app.get('/api/broadcast', async (c) => {
 // ============================================================
 
 app.onError((err, c) => {
-  const requestId = c.get('requestId') || 'unknown';
-  console.error(`[${requestId}] Unhandled error:`, err.message);
+  const rid = c.get('requestId') || 'unknown';
+  console.error(`[${rid}] Unhandled error:`, err.message);
   
   return c.json({
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred. Please try again later.',
-      requestId,
+      requestId: rid,
     }
   }, 500);
 });
 
-// 404 handler
 app.notFound((c) => {
   return c.json({
     success: false,

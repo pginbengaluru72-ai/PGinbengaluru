@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -8,16 +10,25 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "StaySure - Hyper-Local PG Platform",
-  description: "The premium zero-brokerage PG platform.",
+  title: {
+    default: "StaySure — Bengaluru's #1 Verified PG Marketplace",
+    template: "%s | StaySure",
+  },
+  description: "Find verified PGs in HSR Layout, Koramangala, BTM Layout and more. Zero brokerage, real photos, direct owner contact. India's most trusted PG aggregator.",
+  keywords: ["PG in Bengaluru", "PG in HSR Layout", "boys PG", "girls PG", "co-living Bengaluru", "paying guest Bangalore", "verified PG"],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "StaySure",
   },
-  themeColor: "#4f46e5",
-  viewport: "minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover",
+  openGraph: {
+    title: "StaySure — Bengaluru's #1 Verified PG Marketplace",
+    description: "Zero brokerage. Real photos. Physically verified. Find your perfect PG in Bengaluru.",
+    url: "https://hsrpg.in",
+    siteName: "StaySure",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -31,13 +42,9 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
-        {/* Global Ultra-Premium Background */}
-        <div className="fixed inset-0 z-[-1] h-full w-full bg-slate-50 dark:bg-slate-950">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-slate-50 dark:from-indigo-900/20 dark:via-slate-950 dark:to-slate-950"></div>
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-3xl opacity-50 animate-pulse"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-96 w-96 rounded-full bg-blue-500/10 dark:bg-blue-500/5 blur-3xl opacity-50 animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
-        {children}
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );
