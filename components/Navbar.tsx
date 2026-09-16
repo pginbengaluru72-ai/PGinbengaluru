@@ -19,12 +19,12 @@ export function Navbar() {
         {/* Desktop Search Pill */}
         <div className="hidden md:flex items-center justify-center flex-1 mx-6">
           <div className="flex items-center border border-slate-200 shadow-[0_2px_8px_rgb(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgb(0,0,0,0.12)] transition-all duration-300 ease-out cursor-pointer rounded-full p-2 pl-6 bg-white gap-2">
-            <div className="text-[15px] font-semibold text-slate-800 px-3 hover:text-slate-500 transition">Anywhere</div>
+            <div className="text-[14px] font-semibold text-slate-800 px-3 hover:text-slate-500 transition">Search area</div>
             <div className="h-6 w-[1px] bg-slate-200 mx-1"></div>
-            <div className="text-[15px] font-semibold text-slate-800 px-3 hover:text-slate-500 transition">Any week</div>
+            <div className="text-[14px] font-semibold text-slate-800 px-3 hover:text-slate-500 transition">Move-in date</div>
             <div className="h-6 w-[1px] bg-slate-200 mx-1"></div>
-            <div className="text-[15px] text-slate-500 font-light flex items-center gap-3 pl-3 pr-1">
-              Add guests
+            <div className="text-[14px] text-slate-500 font-light flex items-center gap-3 pl-3 pr-1">
+              Gender
               <div className="bg-[#FF385C] hover:bg-[#e03150] transition-colors p-2.5 rounded-full text-white">
                 <Search className="w-4 h-4 stroke-[2.5px]" />
               </div>
@@ -35,7 +35,7 @@ export function Navbar() {
         {/* Right Menu */}
         <div className="flex items-center gap-1 shrink-0">
           <Link href="/list-your-pg">
-            <div className="hidden lg:block text-[15px] font-semibold text-slate-800 py-2.5 px-4 rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
+            <div className="hidden lg:block text-[14px] font-semibold text-slate-800 py-2.5 px-4 rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
               List your PG
             </div>
           </Link>
@@ -62,7 +62,7 @@ export function Navbar() {
             <Search className="w-[22px] h-[22px] text-slate-800 stroke-[2.5px]" />
             <div className="flex flex-col">
               <span className="text-[15px] font-semibold text-slate-800 leading-none mb-1">Where to?</span>
-              <span className="text-[13px] text-slate-500 leading-none">Anywhere • Any week • Add guests</span>
+              <span className="text-[13px] text-slate-500 leading-none">Search area • Move-in date • Gender</span>
             </div>
           </div>
         </Link>

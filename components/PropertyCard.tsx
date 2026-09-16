@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { Heart, Star } from "lucide-react"
+import { Heart, Star, Image as ImageIcon } from "lucide-react"
 
 interface PropertyCardProps {
   slug: string
@@ -28,21 +29,30 @@ export function PropertyCard({
   primaryPhoto,
   verified
 }: PropertyCardProps) {
+  const [imageError, setImageError] = useState(false)
   
   // High-quality fallback image
   const photoUrl = primaryPhoto 
     ? `https://hsrpg-images.pginbengaluru72.workers.dev/${primaryPhoto}` 
-    : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop'
+    : 'https://picsum.photos/seed/pg-fallback/800/600'
 
   return (
     <Link href={`/pg/${slug}`} className="group flex flex-col cursor-pointer pb-2">
-      <div className="relative aspect-square overflow-hidden rounded-[16px] mb-3 bg-slate-100">
-        <img 
-          src={photoUrl} 
-          alt={name}
-          className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500 ease-out"
-          loading="lazy"
-        />
+      <div className="relative aspect-square overflow-hidden rounded-[16px] mb-3 bg-slate-100 flex items-center justify-center">
+        {!imageError ? (
+          <img 
+            src={photoUrl} 
+            alt={name}
+            className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-500 ease-out"
+            loading="lazy"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+            <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+            <span className="text-[13px] font-medium opacity-70">No image</span>
+          </div>
+        )}
         
         {/* Heart Icon (top right) */}
         <div className="absolute top-3 right-3 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] z-10">

@@ -1,29 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building, MapPin, Users, Crown, Banknote, Navigation2, Map, SearchX } from "lucide-react"
+import { Building, MapPin, Users, Navigation2, Map, SearchX, BedSingle, BedDouble, GraduationCap, Briefcase, SlidersHorizontal } from "lucide-react"
 import { PropertyCard } from "@/components/PropertyCard"
 import { publicApi } from "@/lib/apiClient"
 
+// Proper Airbnb-style categories (Types of Stays/Vibes, not mixed with locations or budgets)
 const CATEGORIES = [
   { id: 'all', name: 'All Spaces', icon: Map },
-  { id: 'boys', name: 'Boys PG', icon: Users },
-  { id: 'girls', name: 'Girls PG', icon: Users },
+  { id: 'single', name: 'Private Room', icon: BedSingle },
+  { id: 'double', name: 'Double Sharing', icon: BedDouble },
+  { id: 'triple', name: 'Triple+ Sharing', icon: Users },
   { id: 'coliving', name: 'Co-Living', icon: Building },
-  { id: 'premium', name: 'Premium', icon: Crown },
-  { id: 'budget', name: 'Budget', icon: Banknote },
-  { id: 'hsr', name: 'HSR Layout', icon: MapPin },
-  { id: 'kora', name: 'Koramangala', icon: MapPin },
+  { id: 'student', name: 'Student Friendly', icon: GraduationCap },
+  { id: 'corporate', name: 'Working Pros', icon: Briefcase },
 ]
 
-// MOCK DATA: Fallback if database is empty so the site looks gorgeous out of the box
+// MOCK DATA: Using reliable picsum.photos to avoid 403 hotlinking issues from Unsplash
 const MOCK_PROPERTIES = [
-  { id: 'm1', slug: 'mock-1', name: 'StaySure HSR Elite', type: 'COLIVING', locality: 'HSR Layout', city: 'Bengaluru', startingPrice: 12000, availableBeds: 4, totalBeds: 50, primaryPhoto: null, verified: true, mockImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop' },
-  { id: 'm2', slug: 'mock-2', name: 'Koramangala Comforts', type: 'GIRLS', locality: 'Koramangala', city: 'Bengaluru', startingPrice: 8500, availableBeds: 2, totalBeds: 20, primaryPhoto: null, verified: true, mockImg: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop' },
-  { id: 'm3', slug: 'mock-3', name: 'BTM Budget Stays', type: 'BOYS', locality: 'BTM Layout', city: 'Bengaluru', startingPrice: 6000, availableBeds: 12, totalBeds: 40, primaryPhoto: null, verified: false, mockImg: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=2070&auto=format&fit=crop' },
-  { id: 'm4', slug: 'mock-4', name: 'Indiranagar Premium', type: 'COLIVING', locality: 'Indiranagar', city: 'Bengaluru', startingPrice: 18000, availableBeds: 1, totalBeds: 15, primaryPhoto: null, verified: true, mockImg: 'https://images.unsplash.com/photo-1502672260266-1c1e5250adcd?q=80&w=2070&auto=format&fit=crop' },
-  { id: 'm5', slug: 'mock-5', name: 'Whitefield Tech Haven', type: 'BOYS', locality: 'Whitefield', city: 'Bengaluru', startingPrice: 9000, availableBeds: 8, totalBeds: 60, primaryPhoto: null, verified: true, mockImg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop' },
-  { id: 'm6', slug: 'mock-6', name: 'Bellandur Cozy Girls PG', type: 'GIRLS', locality: 'Bellandur', city: 'Bengaluru', startingPrice: 11000, availableBeds: 3, totalBeds: 25, primaryPhoto: null, verified: false, mockImg: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=2071&auto=format&fit=crop' },
+  { id: 'm1', slug: 'mock-1', name: 'StaySure HSR Elite', type: 'COLIVING', locality: 'HSR Layout', city: 'Bengaluru', startingPrice: 12000, availableBeds: 4, totalBeds: 50, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg1/800/600' },
+  { id: 'm2', slug: 'mock-2', name: 'Koramangala Comforts', type: 'GIRLS', locality: 'Koramangala', city: 'Bengaluru', startingPrice: 8500, availableBeds: 2, totalBeds: 20, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg2/800/600' },
+  { id: 'm3', slug: 'mock-3', name: 'BTM Budget Stays', type: 'BOYS', locality: 'BTM Layout', city: 'Bengaluru', startingPrice: 6000, availableBeds: 12, totalBeds: 40, primaryPhoto: null, verified: false, mockImg: 'https://picsum.photos/seed/pg3/800/600' },
+  { id: 'm4', slug: 'mock-4', name: 'Indiranagar Premium', type: 'COLIVING', locality: 'Indiranagar', city: 'Bengaluru', startingPrice: 18000, availableBeds: 1, totalBeds: 15, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg4/800/600' },
+  { id: 'm5', slug: 'mock-5', name: 'Whitefield Tech Haven', type: 'BOYS', locality: 'Whitefield', city: 'Bengaluru', startingPrice: 9000, availableBeds: 8, totalBeds: 60, primaryPhoto: null, verified: true, mockImg: 'https://picsum.photos/seed/pg5/800/600' },
+  { id: 'm6', slug: 'mock-6', name: 'Bellandur Cozy Girls PG', type: 'GIRLS', locality: 'Bellandur', city: 'Bengaluru', startingPrice: 11000, availableBeds: 3, totalBeds: 25, primaryPhoto: null, verified: false, mockImg: 'https://picsum.photos/seed/pg6/800/600' },
 ]
 
 export default function Home() {
@@ -52,10 +52,12 @@ export default function Home() {
   return (
     <div className="bg-white min-h-screen pb-24 md:pb-10">
       
-      {/* Categories Bar */}
+      {/* Categories Bar & Filters */}
       <div className="sticky top-[80px] z-40 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)] transition-all">
-        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4 relative">
-          <div className="flex items-center gap-10 overflow-x-auto no-scrollbar py-4 pt-5 relative">
+        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4 relative flex items-center gap-4">
+          
+          {/* Scrolling Categories */}
+          <div className="flex-1 flex items-center gap-10 overflow-x-auto no-scrollbar py-4 pt-5 relative">
             {CATEGORIES.map(cat => (
               <div 
                 key={cat.id} 
@@ -76,8 +78,17 @@ export default function Home() {
               </div>
             ))}
           </div>
+          
           {/* Subtle fade on right side to indicate scroll on mobile */}
-          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden"></div>
+          <div className="absolute right-[110px] top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none hidden md:block"></div>
+          
+          {/* Filters Button */}
+          <div className="hidden md:flex shrink-0">
+            <button className="flex items-center gap-2 border border-slate-300 rounded-xl px-4 py-3 hover:border-slate-900 hover:bg-slate-50 transition-colors cursor-pointer ml-4">
+              <SlidersHorizontal className="w-4 h-4 stroke-[2px] text-slate-800" />
+              <span className="text-[14px] font-semibold text-slate-800">Filters</span>
+            </button>
+          </div>
         </div>
       </div>
 
