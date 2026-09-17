@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Building, ShieldCheck, Users, List, PieChart, TrendingUp, AlertTriangle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { adminApi } from "@/lib/apiClient"
 import Link from "next/link"
 
